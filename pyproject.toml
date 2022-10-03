@@ -1,0 +1,137 @@
+
+[build-system]
+requires = ["setuptools >= 58.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="logbook-parser"
+description = "logbook-parser_short_description"
+# readme = "README.rst"
+requires-python = ">=3.7"
+keywords = [
+    "Python",
+]
+license = {file = "LICENSE"}
+# https://pypi.org/classifiers/
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+]
+dependencies=[
+
+]
+dynamic = ["version","readme"]
+
+[tool.setuptools.dynamic]
+version = {attr = "logbook_parser.__version__"}
+readme = {file = ["README.rst"]}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+# build= [
+#     # Packaging and Distribution
+#     # NOTE: pip and setuptools should be installed/upgraded separately
+#     "wheel",
+#     "twine",
+#     "pip-tools",
+#     "build",
+# ]
+dev = [
+    # Packaging and Distribution
+    # NOTE: pip and setuptools should be installed/upgraded separately
+    "wheel",
+    "twine",
+    "pip-tools",
+    "build",
+
+    # Linting and Formatting
+    "black",
+    "coverage",
+    "pylint",
+    "mypy",
+    # "doc8",
+
+    # Testing
+    "tox",
+    "pytest",
+    "pytest-cov",
+
+    # Source control
+    "pre-commit",
+
+    # Tools
+    "pysnooper",
+
+    # Documentation
+    "Sphinx",
+    "sphinx-autobuild",
+    "sphinx-autodoc-typehints",
+    "sphinx_rtd_theme",
+    "myst-parser",
+
+    # Vscode
+    "esbonio",
+    "rst2html",
+    "rstcheck",
+]
+
+# documentation = [
+#     # Documentation
+#     "Sphinx",
+#     "sphinx-autobuild",
+#     "sphinx-autodoc-typehints",
+#     "sphinx_rtd_theme",
+#     "myst-parser",
+# ]
+# vscode = [
+#     # Vscode
+#     "esbonio",
+#     "rst2html",
+#     "rstcheck",
+# ]
+
+
+# [project.scripts]
+# my-script = "my_package.module:function"
+
+[tool.isort]
+profile = "black"
+src_paths = ["src", "test"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+# https://pylint.pycqa.org/en/latest/user_guide/usage/run.html#command-line-options
+# https://pylint.pycqa.org/en/latest/user_guide/configuration/all-options.html#standard-checkers
+# pylint --generate-toml-config > ./pylint-toml-example.toml
+# [tool.pylint.messages_control]
+# disable = [
+#     "raw-checker-failed",
+#     "bad-inline-option",
+#     "locally-disabled",
+#     "file-ignored",
+#     "suppressed-message",
+#     "useless-suppression",
+#     "deprecated-pragma",
+#     "use-symbolic-message-instead"
+# ]
+
+[tool.pylint.format]
+# for black compatability
+max-line-length = "88"
+
+# https://docs.pytest.org/en/6.2.x/customize.html#pyproject-toml
+# [tool.pytest.ini_options]
+# minversion = "6.0"
+# addopts = "-ra -q"
+# testpaths = [
+#     "tests",
+#     "integration",
+# ]
