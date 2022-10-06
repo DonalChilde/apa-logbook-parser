@@ -1,6 +1,7 @@
 """conftest.py file for logbook_parser"""
 import logging
 from pathlib import Path
+from importlib import resources
 
 import pytest
 
@@ -9,9 +10,14 @@ from ..logging import rotating_file_logger
 APP_LOG_LEVEL = logging.INFO
 TEST_LOG_LEVEL = logging.DEBUG
 # If PROJECT_NAMESPACE not used, then make PROJECT_NAMESPACE = ""
-PROJECT_NAMESPACE = "project_namespace".upper() + "_"
-# PROJECT_NAMESPACE = ""
+# PROJECT_NAMESPACE = "project_namespace".upper() + "_"
+PROJECT_NAMESPACE = ""
 PROJECT_SLUG = "logbook_parser".upper()
+
+
+@pytest.fixture(scope="session")
+def report_data_ctx():
+    return resources.path("tests.logbook_parser.resources", "formatted_report.xml")
 
 
 @pytest.fixture(scope="session", name="logger")
