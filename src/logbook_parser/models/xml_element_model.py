@@ -37,10 +37,10 @@ class FlightRow:
     trip_number: str = field(init=False, default="")
     base: str = field(init=False, default="")
     bid_eq: str = field(init=False, default="")
-    departure_utc = field(init=False, default="")
-    arrival_utc = field(init=False, default="")
-    departure_icao = field(init=False, default="")
-    arrival_icao = field(init=False, default="")
+    departure_utc: str = field(init=False, default="")
+    arrival_utc: str = field(init=False, default="")
+    departure_icao: str = field(init=False, default="")
+    arrival_icao: str = field(init=False, default="")
 
     def field_order(self, dropped_fields: str) -> List[str]:
         # TODO make a nice order
