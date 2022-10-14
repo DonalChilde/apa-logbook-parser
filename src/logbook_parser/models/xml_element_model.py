@@ -4,65 +4,6 @@ import uuid
 
 
 @dataclass
-class FlightRow:
-    aa_number: str
-    year: str
-    year_uuid: str
-    month_year: str
-    month_uuid: str
-    trip_uuid: str
-    trip_info: str
-    duty_period_uuid: str
-    flight_uuid: str
-    flight_number: str
-    departure_iata: str
-    departure_lcl: str
-    arrival_iata: str
-    arrival_local: str
-    fly: str
-    leg_greater: str
-    actual_block: str
-    ground_time: str
-    overnight_duration: str
-    eq_model: str
-    eq_number: str
-    eq_type: str
-    eq_code: str
-    fuel_performance: str
-    departure_performance: str
-    arrival_performance: str
-    position: str
-    delay_code: str
-    trip_starts_on: str = field(init=False, default="")
-    trip_number: str = field(init=False, default="")
-    base: str = field(init=False, default="")
-    bid_eq: str = field(init=False, default="")
-    departure_utc: str = field(init=False, default="")
-    arrival_utc: str = field(init=False, default="")
-    departure_icao: str = field(init=False, default="")
-    arrival_icao: str = field(init=False, default="")
-
-    def field_order(self, dropped_fields: str) -> List[str]:
-        # TODO make a nice order
-        # TODO check/update new fields
-        field_str = (
-            "aa_number year  month_year   "
-            "trip_info   flight_number "
-            "departure_station out_datetime arrival_station in_datetime "
-            "fly leg_greater actual_block ground_time overnight_duration "
-            "eq_model eq_number eq_type eq_code fuel_performance departure_performance "
-            "arrival_performance position delay_code "
-            "trip_starts_on trip_number base bid_eq "
-            "year_uuid month_uuid trip_uuid duty_period_uuid flight_uuid "
-        )
-        fields: List[str] = field_str.split()
-        drops = dropped_fields.split()
-        for drop in drops:
-            fields.remove(drop)
-        return fields
-
-
-@dataclass
 class LogbookElement:
     uuid: str = ""
     aa_number: str = ""
@@ -108,6 +49,10 @@ class MonthElement:
 class TripElement:
     uuid: str = ""
     trip_info: str = ""
+    starts_on: str = ""
+    trip_number: str = ""
+    base: str = ""
+    equipment: str = ""
     sum_of_actual_block: str = ""
     sum_of_leg_greater: str = ""
     sum_of_fly: str = ""
@@ -135,9 +80,14 @@ class DutyPeriodElement:
 class FlightElement:
     uuid: str = ""
     flight_number: str = ""
-    departure_station: str = ""
-    out_datetime: str = ""
-    arrival_station: str = ""
+    departure_iata: str = ""
+    departure_icao: str = ""
+    departure_local: str = ""
+    departure_utc: str = ""
+    arrival_iata: str = ""
+    arrival_icao: str = ""
+    arrival_local: str = ""
+    arrival_utc: str = ""
     fly: str = ""
     leg_greater: str = ""
     eq_model: str = ""
@@ -152,7 +102,6 @@ class FlightElement:
     actual_block: str = ""
     position: str = ""
     delay_code: str = ""
-    in_datetime: str = ""
 
     def __post_init__(self):
         if self.uuid == "":
