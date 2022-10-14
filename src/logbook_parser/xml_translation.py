@@ -1,19 +1,6 @@
 """
 """
-# TODO change uuid to be the string of entire data field, at least for flight.
-#       this is to allow for differential exports for same logbook.
-#       maybe make it a function on the FlightElement class, to support removing the
-#       default uuid required to support typechecking. or change uuid to be a string type. <- this
-# TODO add uuid generator to all Element classes, to be called one time after data parsing.
-# TODO data structure to hold parsed info
-# TODO data structure to hold parsed info, as well as interpreted info.
-# TODO output parsed info to csv
-# TODO output interpreted info to csv
-# TODO describe data format in readme
-# TODO cmdline interface
-# TODO flask interface
 
-# from __future__ import annotations
 
 import logging
 import xml.etree.ElementTree as ET
@@ -68,7 +55,6 @@ def parse_XML(path: Path, parse_context: ParseContext) -> xem.LogbookElement:
         logbook.sum_of_fly = find_value(root, footer_field_path.format("SumofFly4"))
 
         for item in root.findall("crystal_reports:Group", ns):
-            # pylint: disable=no-member
             logbook.years.append(handle_year(item, parse_context))
         return logbook
 
