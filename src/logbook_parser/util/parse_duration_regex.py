@@ -51,7 +51,14 @@ def parse_duration(pattern: re.Pattern, duration_string: str) -> DurationDict:
     if not result:
         raise ValueError(f"{duration_string} does not match pattern {pattern.pattern}")
     match_dict = result.groupdict()
-    possible_groups = ["hours", "minutes", "seconds", "fractional_seconds"]
+    possible_groups = [
+        "years",
+        "days",
+        "hours",
+        "minutes",
+        "seconds",
+        "fractional_seconds",
+    ]
     for unit in possible_groups:
         if unit not in match_dict or match_dict[unit] is None:
             match_dict[unit] = "0"
