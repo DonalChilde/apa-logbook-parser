@@ -13,93 +13,85 @@
 # TODO cmdline interface
 # TODO flask interface
 
-from __future__ import annotations
+# from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
 import logging
-from pathlib import Path
-from dataclasses import dataclass, field, asdict
-from typing import Callable, List, Dict, Literal, Sequence, NamedTuple, Optional, Any
-from datetime import timedelta
-
-# from utilities import json_util, csv_util
-import logbook_parser.models.xml_element_model as xem
-import uuid
 import xml.etree.ElementTree as ET
-import click
-import json
-import csv
+from pathlib import Path
+from typing import Dict, List, TypeVar
+import airportsdata
+from zoneinfo import ZoneInfo
 
-# from sys import stdout
-
+import logbook_parser.models.xml_element_model as xem
+from logbook_parser.models.flight_row import FlightRow
+from logbook_parser.util.parse_duration_regex import pattern_HHHMM, parse_duration
 
 #### setting up logger ####
 logger = logging.getLogger(__name__)
 
-#### Log Level ####
-# NOTSET=0, DEBUG=10, INFO=20, WARN=30, ERROR=40, and CRITICAL=50
-log_level = logging.DEBUG
-# logLevel = logging.INFO
-logger.setLevel(log_level)
+# #### Log Level ####
+# # NOTSET=0, DEBUG=10, INFO=20, WARN=30, ERROR=40, and CRITICAL=50
+# log_level = logging.DEBUG
+# # logLevel = logging.INFO
+# logger.setLevel(log_level)
 
-#### Log Handler ####
-log_formatter = logging.Formatter(
-    "%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s",
-    datefmt="%d-%b-%y %H:%M:%S",
-)
-# log_handler = logging.StreamHandler(stdout)
-log_handler = logging.StreamHandler()
-log_handler.setFormatter(log_formatter)
-logger.addHandler(log_handler)
+# #### Log Handler ####
+# log_formatter = logging.Formatter(
+#     "%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s",
+#     datefmt="%d-%b-%y %H:%M:%S",
+# )
+# # log_handler = logging.StreamHandler(stdout)
+# log_handler = logging.StreamHandler()
+# log_handler.setFormatter(log_formatter)
+# logger.addHandler(log_handler)
 
 ns = {"crystal_reports": "urn:crystal-reports:schemas:report-detail"}
+airports = airportsdata.load("IATA")  # key is IATA code
+
+T = TypeVar("T")
 
 
-def safe_strip(value: Any) -> Any:
+def safe_strip(value: T) -> T | str:
     if isinstance(value, str):
-        newValue = value.strip()
-        return newValue
+        new_value = value.strip()
+        return new_value
     else:
         return value
 
 
-def parse_XML(path, parseContext):
+def parse_XML(path: Path, parse_context) -> xem.LogbookElement:
     # print(path.resolve())
-    with open(path, "r") as xmlFile:
+    with open(path, "r", encoding="utf-8") as xmlFile:
         tree = ET.parse(xmlFile)
-        root = tree.getroot()
+        root: ET.Element = tree.getroot()
         logbook = xem.LogbookElement()
-        logbook.aa_number = safe_strip(
-            root.find(
-                './crystal_reports:ReportHeader/crystal_reports:Section/crystal_reports:Field[@Name="EmpNum1"]/crystal_reports:Value',
-                ns,
-            ).text
+        header_field_path = (
+            "./crystal_reports:ReportHeader/crystal_reports:Section/crystal_reports"
+            ':Field[@Name="{}"]/crystal_reports:Value'
         )
-        logbook.sum_of_actual_block = safe_strip(
-            root.find(
-                './crystal_reports:ReportFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofActualBlock4"]/crystal_reports:Value',
-                ns,
-            ).text
+        footer_field_path = (
+            "./crystal_reports:ReportFooter/crystal_reports:Section/crystal_reports"
+            ':Field[@Name="{}"]/crystal_reports:Value'
         )
-        logbook.sum_of_leg_greater = safe_strip(
-            root.find(
-                './crystal_reports:ReportFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofLegGtr4"]/crystal_reports:Value',
-                ns,
-            ).text
+        logbook.aa_number = find_value(root, header_field_path.format("EmpNum1"))
+        logbook.sum_of_actual_block = find_value(
+            root, footer_field_path.format("SumofActualBlock4")
         )
-        logbook.sum_of_fly = safe_strip(
-            root.find(
-                './crystal_reports:ReportFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofFly4"]/crystal_reports:Value',
-                ns,
-            ).text
+        logbook.sum_of_leg_greater = find_value(
+            root, footer_field_path.format("SumofLegGtr4")
         )
-        parseContext["xmlparse"] = {}
+        logbook.sum_of_fly = find_value(root, footer_field_path.format("SumofFly4"))
+
+        parse_context["xmlparse"] = {}
 
         for item in root.findall("crystal_reports:Group", ns):
             # pylint: disable=no-member
-            logbook.years.append(handleYear(item, parseContext))
+            logbook.years.append(handleYear(item, parse_context))
         return logbook
 
 
-def logbookStats(logbook: xem.LogbookElement, parseContext: dict):
+def logbook_stats(logbook: xem.LogbookElement, parse_context: dict):
     """
     Logbook: total times in the 3 duration fields, total months, total dutyperiods
         total flights, total dh flights,total overnights, nights at each station.
@@ -108,230 +100,297 @@ def logbookStats(logbook: xem.LogbookElement, parseContext: dict):
     dutyperiod:
     flight:
     """
-    pass
+    raise NotImplementedError
 
 
-def handleYear(yearElement, parseContext):
+def handleYear(element: ET.Element, parse_context) -> xem.YearElement:
     # print('made it to year')
     year = xem.YearElement()
-    year.year = safe_strip(
-        yearElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Text[@Name="Text34"]/crystal_reports:TextValue',
-            ns,
-        ).text
+    text_path = (
+        "./crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Text"
+        '[@Name="Text34"]/crystal_reports:TextValue'
     )
-    year.sum_of_actual_block = safe_strip(
-        yearElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofActualBlock6"]/crystal_reports:Value',
-            ns,
-        ).text
+    field_path = (
+        "./crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field"
+        '[@Name="SumofActualBlock6"]/crystal_reports:Value'
     )
-    year.sum_of_leg_greater = safe_strip(
-        yearElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofLegGtr6"]/crystal_reports:Value',
-            ns,
-        ).text
-    )
-    year.sum_of_fly = safe_strip(
-        yearElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofFly6"]/crystal_reports:Value',
-            ns,
-        ).text
+    year.year = find_value(element, text_path.format("Text34"))
+
+    year.sum_of_actual_block = find_value(
+        element, field_path.format("SumofActualBlock6")
     )
 
-    for item in yearElement.findall("crystal_reports:Group", ns):
+    year.sum_of_leg_greater = find_value(element, field_path.format("SumofLegGtr6"))
+
+    year.sum_of_fly = find_value(element, field_path.format("SumofFly6"))
+
+    for item in element.findall("crystal_reports:Group", ns):
         # pylint: disable=no-member
-        year.months.append(handleMonth(item, parseContext))
-    validateYear(year, yearElement)
+        year.months.append(handle_month(item, parse_context))
+    validate_year(year, element)
 
     return year
 
 
-def handleMonth(monthElement, parseContext):
+def handle_month(element: ET.Element, parse_context) -> xem.MonthElement:
     # print('made it to month')
     month = xem.MonthElement()
-    month.month_year = safe_strip(
-        monthElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Text[@Name="Text35"]/crystal_reports:TextValue',
-            ns,
-        ).text
+    text_path = (
+        "./crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Text"
+        '[@Name="{}"]/crystal_reports:TextValue'
     )
-    month.sum_of_actual_block = safe_strip(
-        monthElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofActualBlock2"]/crystal_reports:Value',
-            ns,
-        ).text
+    field_path = (
+        "./crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field"
+        '[@Name="{}"]/crystal_reports:Value'
     )
-    month.sum_of_leg_greater = safe_strip(
-        monthElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofLegGtr2"]/crystal_reports:Value',
-            ns,
-        ).text
-    )
-    month.sum_of_fly = safe_strip(
-        monthElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofFly2"]/crystal_reports:Value',
-            ns,
-        ).text
+    month.month_year = find_value(element, text_path.format("Text35"))
+    month.sum_of_actual_block = find_value(
+        element, field_path.format("SumofActualBlock2")
     )
 
-    for item in monthElement.findall("crystal_reports:Group", ns):
+    month.sum_of_leg_greater = find_value(element, field_path.format("SumofLegGtr2"))
+
+    month.sum_of_fly = find_value(element, field_path.format("SumofFly2"))
+
+    for item in element.findall("crystal_reports:Group", ns):
         # pylint: disable=no-member
-        month.trips.append(handleTrip(item, parseContext))
-    validateMonth(month, monthElement)
+        month.trips.append(handleTrip(item, parse_context))
+    validate_month(month, element)
     return month
 
 
-def handleTrip(tripElement, parseContext):
-    # print('made it to trip')
+def find_value(element: ET.Element, xpath: str) -> str:
+    if element is not None:
+        return safe_strip(
+            element.find(
+                xpath,
+                ns,
+            ).text
+        )
+    raise NotImplementedError("got None element?")
+
+
+def handleTrip(element: ET.Element, parse_context) -> xem.TripElement:
+
     trip = xem.TripElement()
-    trip.trip_info = safe_strip(
-        tripElement.find(
-            './crystal_reports:GroupHeader/crystal_reports:Section/crystal_reports:Text[@Name="Text10"]/crystal_reports:TextValue',
-            ns,
-        ).text
+
+    text_path = (
+        "./crystal_reports:GroupHeader/crystal_reports:Section/crystal_reports:Text"
+        '[@Name="{}"]/crystal_reports:TextValue'
     )
-    trip.sum_of_actual_block = safe_strip(
-        tripElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofActualBlock3"]/crystal_reports:Value',
-            ns,
-        ).text
+    field_path = (
+        "./crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field"
+        '[@Name="SumofActualBlock3"]/crystal_reports:Value'
     )
-    trip.sum_of_leg_greater = safe_strip(
-        tripElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofLegGtr3"]/crystal_reports:Value',
-            ns,
-        ).text
+    trip.trip_info = find_value(
+        element,
+        text_path.format("Text10"),
     )
-    trip.sum_of_fly = safe_strip(
-        tripElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofFly3"]/crystal_reports:Value',
-            ns,
-        ).text
+    trip.sum_of_actual_block = find_value(
+        element,
+        field_path.format("SumofActualBlock3"),
+    )
+    trip.sum_of_leg_greater = find_value(
+        element,
+        field_path.format("SumofLegGtr3"),
+    )
+    trip.sum_of_fly = find_value(
+        element,
+        field_path.format("SumofFly3"),
     )
 
-    for item in tripElement.findall("crystal_reports:Group", ns):
+    for item in element.findall("crystal_reports:Group", ns):
         # pylint: disable=no-member
-        trip.duty_periods.append(handleDutyPeriod(item, parseContext))
-    validateTrip(trip, tripElement)
+        trip.duty_periods.append(handle_duty_period(item, parse_context))
+    validate_trip(trip, element)
     return trip
 
 
-def handleDutyPeriod(dutyPeriodElement, parseContext):
-    # print('made it to dp')
-    dutyPeriod = xem.DutyPeriodElement()
-    dutyPeriod.sum_of_actual_block = safe_strip(
-        dutyPeriodElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofActualBlock1"]/crystal_reports:Value',
-            ns,
-        ).text
+def handle_duty_period(element: ET.Element, parse_context) -> xem.DutyPeriodElement:
+    duty_period = xem.DutyPeriodElement()
+    field_path = (
+        "./crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports"
+        ':Field[@Name="{}"]/crystal_reports:Value'
     )
-    dutyPeriod.sum_of_leg_greater = safe_strip(
-        dutyPeriodElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofLegGtr1"]/crystal_reports:Value',
-            ns,
-        ).text
+    duty_period.sum_of_actual_block = find_value(
+        element, field_path.format("SumofActualBlock1")
     )
-    dutyPeriod.sum_of_fly = safe_strip(
-        dutyPeriodElement.find(
-            './crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports:Field[@Name="SumofFly1"]/crystal_reports:Value',
-            ns,
-        ).text
+    duty_period.sum_of_leg_greater = find_value(
+        element, field_path.format("SumofLegGtr1")
     )
-
-    for item in dutyPeriodElement.findall("crystal_reports:Details", ns):
+    duty_period.sum_of_fly = find_value(element, field_path.format("SumofFly1"))
+    for item in element.findall("crystal_reports:Details", ns):
         # pylint: disable=no-member
-        dutyPeriod.flights.append(handleFlight(item, parseContext))
-    # print(dutyPeriod)
-    validateDutyPeriod(dutyPeriod, dutyPeriodElement)
-    return dutyPeriod
+        duty_period.flights.append(handle_flight(item, parse_context))
+    validate_duty_period(duty_period, element)
+    return duty_period
 
 
-def section_field_value(field_name) -> str:
-    xpath_string = f"./crystal_reports:Section/crystal_reports:Field[@Name='{field_name}']/crystal_reports:Value"
-    return xpath_string
-
-
-def get_xpath_value(
-    element: ET.ElementTree,
-    field_name: str,
-    namespace: str,
-    xpath_builder: Callable[[str], str],
-) -> str:
-    value = safe_strip(element.find(xpath_builder(field_name), namespace).text)
-    return value
-
-
-def handleFlight(flt_ele, parse_context: Dict):
-    # print('made it to flight')
-    # print(flightElement.findall('.'))
+def handle_flight(element: ET.Element, parse_context: Dict) -> xem.FlightElement:
+    _ = parse_context
     flight = xem.FlightElement()
-    # flight.flightNumber = flightElement.find('./{urn:crystal-reports:schemas:report-detail}Section/{urn:crystal-reports:schemas:report-detail}Field/{urn:crystal-reports:schemas:report-detail}Value').text)
-    # flight.flight_number = safe_strip(
-    #     flightElement.find(
-    #         './crystal_reports:Section/crystal_reports:Field[@Name="Flt1"]/crystal_reports:Value',
-    #         ns,
-    #     ).text
-    # )
-    xpath_builder = section_field_value
-    flight.flight_number = get_xpath_value(flt_ele, "Flt1", ns, xpath_builder)
-    flight.departure_station = get_xpath_value(flt_ele, "DepSta1", ns, xpath_builder)
-    flight.out_datetime = get_xpath_value(flt_ele, "OutDtTime1", ns, xpath_builder)
-    flight.arrival_station = get_xpath_value(flt_ele, "ArrSta1", ns, xpath_builder)
-    flight.fly = get_xpath_value(flt_ele, "Fly1", ns, xpath_builder)
-    flight.leg_greater = get_xpath_value(flt_ele, "LegGtr1", ns, xpath_builder)
-    flight.eq_model = get_xpath_value(flt_ele, "Model1", ns, xpath_builder)
-    flight.eq_number = get_xpath_value(flt_ele, "AcNum1", ns, xpath_builder)
-    flight.eq_type = get_xpath_value(flt_ele, "EQType1", ns, xpath_builder)
-    flight.eq_code = get_xpath_value(flt_ele, "LeqEq1", ns, xpath_builder)
-    flight.ground_time = get_xpath_value(flt_ele, "Grd1", ns, xpath_builder)
-    flight.overnight_duration = get_xpath_value(flt_ele, "DpActOdl1", ns, xpath_builder)
-    flight.fuel_performance = get_xpath_value(flt_ele, "FuelPerf1", ns, xpath_builder)
-    flight.departure_performance = get_xpath_value(
-        flt_ele, "DepPerf1", ns, xpath_builder
+    field_path = (
+        "./crystal_reports:Section/crystal_reports:Field"
+        "[@Name='{}']/crystal_reports:Value"
     )
-    flight.arrival_performance = get_xpath_value(flt_ele, "ArrPerf1", ns, xpath_builder)
-    flight.actual_block = get_xpath_value(flt_ele, "ActualBlock1", ns, xpath_builder)
-    flight.position = get_xpath_value(flt_ele, "ActulaPos1", ns, xpath_builder)
-    flight.delay_code = get_xpath_value(flt_ele, "DlyCode1", ns, xpath_builder)
-    flight.in_datetime = get_xpath_value(
-        flt_ele, "InDateTimeOrMins1", ns, xpath_builder
-    )
+    flight.flight_number = find_value(element, field_path.format("Flt1"))
+    flight.departure_iata = find_value(element, field_path.format("DepSta1"))
+    flight.departure_local = find_value(element, field_path.format("OutDtTime1"))
+    flight.arrival_iata = find_value(element, field_path.format("ArrSta1"))
+    flight.fly = find_value(element, field_path.format("Fly1"))
+    flight.leg_greater = find_value(element, field_path.format("LegGtr1"))
+    flight.eq_model = find_value(element, field_path.format("Model1"))
+    flight.eq_number = find_value(element, field_path.format("AcNum1"))
+    flight.eq_type = find_value(element, field_path.format("EQType1"))
+    flight.eq_code = find_value(element, field_path.format("LeqEq1"))
+    flight.ground_time = find_value(element, field_path.format("Grd1"))
+    flight.overnight_duration = find_value(element, field_path.format("DpActOdl1"))
+    flight.fuel_performance = find_value(element, field_path.format("FuelPerf1"))
+    flight.departure_performance = find_value(element, field_path.format("DepPerf1"))
+    flight.arrival_performance = find_value(element, field_path.format("ArrPerf1"))
+    flight.actual_block = find_value(element, field_path.format("ActualBlock1"))
+    flight.position = find_value(element, field_path.format("ActulaPos1"))
+    flight.delay_code = find_value(element, field_path.format("DlyCode1"))
+    flight.arrival_local = find_value(element, field_path.format("InDateTimeOrMins1"))
 
-    validateFlight(flight, flt_ele)
+    validate_flight(flight, element)
     return flight
 
 
-def validateYear(year, yearElement):
-    pass
+def validate_year(year, element: ET.Element):
+    _ = element, year
 
 
-def validateMonth(month, monthElement):
-    pass
+def validate_month(month, element: ET.Element):
+    _ = element, month
 
 
-def validateTrip(trip, tripElement):
-    pass
+def validate_trip(trip, element: ET.Element):
+    _ = element
+    split_trip_info(trip)
+    # TODO check overnight lengths, some overnights are missing. infer from utc in time?
+    # FIXME output validation messages, esp, when data is infered.
 
 
-def validateDutyPeriod(dutyPeriod, dutyPeriodElement):
-    pass
+def validate_duty_period(duty_period, element: ET.Element):
+    _ = element, duty_period
 
 
-def validateFlight(flight, flightElement):
+def validate_flight(flight: xem.FlightElement, element: ET.Element):
     # odl has junk data, drop data when flight has a ground time? also junk data has no
     # decimal? invalid time format?
-    pass
+    _ = element
+    remove_bad_odl(flight)
+    if flight.overnight_duration:
+        flight.overnight_duration = parse_duration_string(flight.overnight_duration)
+    if flight.ground_time:
+        flight.ground_time = parse_duration_string(flight.ground_time)
+    if flight.actual_block:
+        flight.actual_block = parse_duration_string(flight.actual_block)
+    if flight.leg_greater:
+        flight.leg_greater = parse_duration_string(flight.leg_greater)
+    if flight.fly:
+        flight.fly = parse_duration_string(flight.fly)
+    set_icao(flight)
+    make_tz_aware(flight)
+    check_times_against_durations(flight)
 
 
-def flatten_flights(logbook: xem.LogbookElement) -> List[xem.FlightRow]:
+def check_times_against_durations(flight: xem.FlightElement):
+    _ = flight
+    # check departure and arrival times against a duration when available.
+
+
+def set_icao(flight: xem.FlightElement):
+    flight.departure_icao = airports[flight.departure_iata]["icao"]
+    flight.arrival_icao = airports[flight.arrival_iata]["icao"]
+
+
+def make_tz_aware(flight: xem.FlightElement):
+    dep_local = datetime.fromisoformat(flight.departure_local)
+    dep_local = dep_local.replace(
+        tzinfo=ZoneInfo(airports[flight.departure_iata]["tz"])
+    )
+    flight.departure_local = dep_local.isoformat()
+    flight.departure_utc = dep_local.astimezone(timezone.utc).isoformat()
+    complete_arrival_time(dep_local, flight)
+    arr_local = datetime.fromisoformat(flight.arrival_local)
+    arr_local = arr_local.replace(tzinfo=ZoneInfo(airports[flight.arrival_iata]["tz"]))
+    flight.arrival_local = arr_local.isoformat()
+    flight.arrival_utc = arr_local.astimezone(timezone.utc).isoformat()
+
+
+def complete_arrival_time(departure: datetime, flight: xem.FlightElement):
+    # 10/30 11:11
+    # 22:57
+    dep_no_tz = departure.replace(tzinfo=None)
+    year_added = f"{departure.year}/{flight.arrival_local}"
+    try:
+        partial = datetime.strptime(year_added, "%Y/%m/%d %H:%M")
+        # check if overlaps year, eg. 12/31-1/1
+        if partial < dep_no_tz:
+            partial = partial.replace(year=departure.year + 1)
+    except ValueError as err:
+        logger.info("Attempt alternate parse: %s", err)
+        try:
+            partial = datetime.strptime(year_added, "%Y/%H:%M")
+            partial = partial.replace(month=departure.month, day=departure.day)
+            # check if overlaps day, eg. 2350-0230
+            if partial.time() < departure.time():
+                partial = partial + timedelta(days=1)
+            # check if overlaps year, eg. 12/31-1/1
+            if partial < dep_no_tz:
+                partial = partial.replace(year=departure.year + 1)
+        except ValueError as err_2:
+            _ = err_2
+            logger.error(
+                "Failure to parse %s for flight %s",
+                flight.arrival_local,
+                flight.uuid,
+                exc_info=True,
+            )
+            return
+    if partial < dep_no_tz:
+        logger.warning("Failed to parse the arrival time for %s", flight)
+        return
+    flight.arrival_local = partial.isoformat()
+
+
+def remove_bad_odl(flight: xem.FlightElement):
+
+    if (
+        flight.overnight_duration
+        and "." not in flight.overnight_duration
+        and flight.ground_time
+    ):
+        flight.overnight_duration = ""
+
+
+def split_trip_info(trip_element: xem.TripElement):
+    # TODO raise a valdation error.
+    split_info = trip_element.trip_info.split()
+    if len(split_info) == 4:
+        trip_element.starts_on = split_info[0]
+        trip_element.trip_number = split_info[1]
+        trip_element.base = split_info[2]
+        trip_element.equipment = split_info[3]
+
+
+def parse_duration_string(dur_string: str) -> str:
+    pattern = pattern_HHHMM(hm_sep=".")
+    dur = parse_duration(pattern=pattern, duration_string=dur_string)
+    return f"{dur['hours']}:{dur['minutes']:02}:00"
+
+
+def flatten_flights(logbook: xem.LogbookElement) -> List[FlightRow]:
+    # FIXME move this to separate module
     rows = []
     for year in logbook.years:
         for month in year.months:
             for trip in month.trips:
-                for duty_period in trip.duty_periods:
-                    for flight in duty_period.flights:
-                        row = xem.FlightRow(
+                for dp_index, duty_period in enumerate(trip.duty_periods, start=1):
+                    for flt_index, flight in enumerate(duty_period.flights, start=1):
+                        row = FlightRow(
                             aa_number=logbook.aa_number,
                             year=year.year,
                             year_uuid=year.uuid,
@@ -342,10 +401,15 @@ def flatten_flights(logbook: xem.LogbookElement) -> List[xem.FlightRow]:
                             duty_period_uuid=duty_period.uuid,
                             flight_uuid=flight.uuid,
                             flight_number=flight.flight_number,
-                            departure_iata=flight.departure_station,
-                            departure_lcl=flight.out_datetime,
-                            arrival_iata=flight.arrival_station,
-                            arrival_local=flight.in_datetime,
+                            dp_flt=f"{dp_index}-{flt_index}",
+                            departure_iata=flight.departure_iata,
+                            departure_icao=flight.departure_icao,
+                            departure_local=flight.departure_local,
+                            departure_utc=flight.departure_utc,
+                            arrival_iata=flight.arrival_iata,
+                            arrival_icao=flight.arrival_icao,
+                            arrival_local=flight.arrival_local,
+                            arrival_utc=flight.arrival_utc,
                             fly=flight.fly,
                             leg_greater=flight.leg_greater,
                             actual_block=flight.actual_block,
@@ -360,13 +424,12 @@ def flatten_flights(logbook: xem.LogbookElement) -> List[xem.FlightRow]:
                             arrival_performance=flight.arrival_performance,
                             position=flight.position,
                             delay_code=flight.delay_code,
+                            trip_number=trip.trip_number,
+                            trip_starts_on=trip.starts_on,
+                            bid_eq=trip.equipment,
+                            base=trip.base,
                         )
-                        split_trip_info = row.trip_info.split()
-                        if len(split_trip_info) == 4:
-                            row.trip_starts_on = split_trip_info[0]
-                            row.trip_number = split_trip_info[1]
-                            row.base = split_trip_info[2]
-                            row.bid_eq = split_trip_info[3]
+
                         rows.append(row)
     return rows
 
@@ -401,23 +464,23 @@ def flatten_flights(logbook: xem.LogbookElement) -> List[xem.FlightRow]:
 #             writer.writerow(asdict(row))
 
 
-def dataclass_to_csv(file_out: Path, data: List, skip_fields: str = ""):
+# def dataclass_to_csv(file_out: Path, data: List, skip_fields: str = ""):
 
-    # TODO use final version from snippets.
-    fieldnames = list(asdict(data[0]).keys())
-    skips = skip_fields.split()
-    for skip in skips:
-        fieldnames.remove(skip)
-    if skips:
-        extras: Literal["raise", "ignore"] = "ignore"
-    else:
-        extras = "raise"
-    with open(file_out, "w", newline="") as csv_file:
-        print("in the open")
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames, extrasaction=extras)
-        writer.writeheader()
-        for row in data:
-            writer.writerow(asdict(row))
+#     # TODO use final version from snippets.
+#     fieldnames = list(asdict(data[0]).keys())
+#     skips = skip_fields.split()
+#     for skip in skips:
+#         fieldnames.remove(skip)
+#     if skips:
+#         extras: Literal["raise", "ignore"] = "ignore"
+#     else:
+#         extras = "raise"
+#     with open(file_out, "w", newline="") as csv_file:
+#         print("in the open")
+#         writer = csv.DictWriter(csv_file, fieldnames=fieldnames, extrasaction=extras)
+#         writer.writeheader()
+#         for row in data:
+#             writer.writerow(asdict(row))
 
 
 # def saveRawJson(xmlPath: Path, savePath: Path, parseContext: dict):
