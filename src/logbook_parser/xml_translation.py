@@ -15,55 +15,39 @@
 
 # from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import logging
 import xml.etree.ElementTree as ET
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, List, TypeVar
-import airportsdata
+from typing import Dict, List
 from zoneinfo import ZoneInfo
+
+import airportsdata
 
 import logbook_parser.models.xml_element_model as xem
 from logbook_parser.models.flight_row import FlightRow
-from logbook_parser.util.parse_duration_regex import pattern_HHHMM, parse_duration
+from logbook_parser.util.parse_duration_regex import parse_duration, pattern_HHHMM
+from logbook_parser.util.safe_strip import safe_strip
+from logbook_parser.util.publisher_consumer import MessagePublisher
 
-#### setting up logger ####
 logger = logging.getLogger(__name__)
-
-# #### Log Level ####
-# # NOTSET=0, DEBUG=10, INFO=20, WARN=30, ERROR=40, and CRITICAL=50
-# log_level = logging.DEBUG
-# # logLevel = logging.INFO
-# logger.setLevel(log_level)
-
-# #### Log Handler ####
-# log_formatter = logging.Formatter(
-#     "%(asctime)s — %(name)s — %(levelname)s — %(funcName)s:%(lineno)d — %(message)s",
-#     datefmt="%d-%b-%y %H:%M:%S",
-# )
-# # log_handler = logging.StreamHandler(stdout)
-# log_handler = logging.StreamHandler()
-# log_handler.setFormatter(log_formatter)
-# logger.addHandler(log_handler)
-
 ns = {"crystal_reports": "urn:crystal-reports:schemas:report-detail"}
 airports = airportsdata.load("IATA")  # key is IATA code
 
-T = TypeVar("T")
+
+class ParseContext:
+    def __init__(self, msg_pub: MessagePublisher | None = None) -> None:
+        if msg_pub is None:
+            self.msg_pub = MessagePublisher(consumers=[])
+        else:
+            self.msg_pub = msg_pub
+        self.extra: Dict = {}
 
 
-def safe_strip(value: T) -> T | str:
-    if isinstance(value, str):
-        new_value = value.strip()
-        return new_value
-    else:
-        return value
-
-
-def parse_XML(path: Path, parse_context) -> xem.LogbookElement:
+def parse_XML(path: Path, parse_context: ParseContext) -> xem.LogbookElement:
     # print(path.resolve())
-    with open(path, "r", encoding="utf-8") as xmlFile:
-        tree = ET.parse(xmlFile)
+    with open(path, "r", encoding="utf-8") as xml_file:
+        tree = ET.parse(xml_file)
         root: ET.Element = tree.getroot()
         logbook = xem.LogbookElement()
         header_field_path = (
@@ -83,11 +67,9 @@ def parse_XML(path: Path, parse_context) -> xem.LogbookElement:
         )
         logbook.sum_of_fly = find_value(root, footer_field_path.format("SumofFly4"))
 
-        parse_context["xmlparse"] = {}
-
         for item in root.findall("crystal_reports:Group", ns):
             # pylint: disable=no-member
-            logbook.years.append(handleYear(item, parse_context))
+            logbook.years.append(handle_year(item, parse_context))
         return logbook
 
 
@@ -103,7 +85,7 @@ def logbook_stats(logbook: xem.LogbookElement, parse_context: dict):
     raise NotImplementedError
 
 
-def handleYear(element: ET.Element, parse_context) -> xem.YearElement:
+def handle_year(element: ET.Element, parse_context: ParseContext) -> xem.YearElement:
     # print('made it to year')
     year = xem.YearElement()
     text_path = (
@@ -127,12 +109,12 @@ def handleYear(element: ET.Element, parse_context) -> xem.YearElement:
     for item in element.findall("crystal_reports:Group", ns):
         # pylint: disable=no-member
         year.months.append(handle_month(item, parse_context))
-    validate_year(year, element)
+    validate_year(year, element, parse_context)
 
     return year
 
 
-def handle_month(element: ET.Element, parse_context) -> xem.MonthElement:
+def handle_month(element: ET.Element, parse_context: ParseContext) -> xem.MonthElement:
     # print('made it to month')
     month = xem.MonthElement()
     text_path = (
@@ -155,7 +137,7 @@ def handle_month(element: ET.Element, parse_context) -> xem.MonthElement:
     for item in element.findall("crystal_reports:Group", ns):
         # pylint: disable=no-member
         month.trips.append(handleTrip(item, parse_context))
-    validate_month(month, element)
+    validate_month(month, element, parse_context)
     return month
 
 
@@ -170,7 +152,7 @@ def find_value(element: ET.Element, xpath: str) -> str:
     raise NotImplementedError("got None element?")
 
 
-def handleTrip(element: ET.Element, parse_context) -> xem.TripElement:
+def handleTrip(element: ET.Element, parse_context: ParseContext) -> xem.TripElement:
 
     trip = xem.TripElement()
 
@@ -202,11 +184,13 @@ def handleTrip(element: ET.Element, parse_context) -> xem.TripElement:
     for item in element.findall("crystal_reports:Group", ns):
         # pylint: disable=no-member
         trip.duty_periods.append(handle_duty_period(item, parse_context))
-    validate_trip(trip, element)
+    validate_trip(trip, element, parse_context)
     return trip
 
 
-def handle_duty_period(element: ET.Element, parse_context) -> xem.DutyPeriodElement:
+def handle_duty_period(
+    element: ET.Element, parse_context: ParseContext
+) -> xem.DutyPeriodElement:
     duty_period = xem.DutyPeriodElement()
     field_path = (
         "./crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports"
@@ -222,11 +206,13 @@ def handle_duty_period(element: ET.Element, parse_context) -> xem.DutyPeriodElem
     for item in element.findall("crystal_reports:Details", ns):
         # pylint: disable=no-member
         duty_period.flights.append(handle_flight(item, parse_context))
-    validate_duty_period(duty_period, element)
+    validate_duty_period(duty_period, element, parse_context)
     return duty_period
 
 
-def handle_flight(element: ET.Element, parse_context: Dict) -> xem.FlightElement:
+def handle_flight(
+    element: ET.Element, parse_context: ParseContext
+) -> xem.FlightElement:
     _ = parse_context
     flight = xem.FlightElement()
     field_path = (
@@ -253,33 +239,35 @@ def handle_flight(element: ET.Element, parse_context: Dict) -> xem.FlightElement
     flight.delay_code = find_value(element, field_path.format("DlyCode1"))
     flight.arrival_local = find_value(element, field_path.format("InDateTimeOrMins1"))
 
-    validate_flight(flight, element)
+    validate_flight(flight, element, parse_context)
     return flight
 
 
-def validate_year(year, element: ET.Element):
-    _ = element, year
+def validate_year(year, element: ET.Element, parse_context: ParseContext):
+    _ = element, year, parse_context
 
 
-def validate_month(month, element: ET.Element):
-    _ = element, month
+def validate_month(month, element: ET.Element, parse_context: ParseContext):
+    _ = element, month, parse_context
 
 
-def validate_trip(trip, element: ET.Element):
-    _ = element
+def validate_trip(trip, element: ET.Element, parse_context: ParseContext):
+    _ = element, parse_context
     split_trip_info(trip)
     # TODO check overnight lengths, some overnights are missing. infer from utc in time?
     # FIXME output validation messages, esp, when data is infered.
 
 
-def validate_duty_period(duty_period, element: ET.Element):
-    _ = element, duty_period
+def validate_duty_period(duty_period, element: ET.Element, parse_context: ParseContext):
+    _ = element, duty_period, parse_context
 
 
-def validate_flight(flight: xem.FlightElement, element: ET.Element):
+def validate_flight(
+    flight: xem.FlightElement, element: ET.Element, parse_context: ParseContext
+):
     # odl has junk data, drop data when flight has a ground time? also junk data has no
     # decimal? invalid time format?
-    _ = element
+    _ = element, parse_context
     remove_bad_odl(flight)
     if flight.overnight_duration:
         flight.overnight_duration = parse_duration_string(flight.overnight_duration)
