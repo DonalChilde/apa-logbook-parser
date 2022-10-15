@@ -26,7 +26,7 @@ FS = r"(?P<fractional_seconds>([0-9]+))"
 
 # FIXME get a dict of times first, refactor to allow timedelta or duration creation.
 
-
+# FIXME handle commas in matches better, eg. 2,750
 # def parse_iso_duration(duration_string: str) -> IsoDuration:
 #     pass
 
@@ -62,6 +62,7 @@ def parse_duration(pattern: re.Pattern, duration_string: str) -> DurationDict:
     for unit in possible_groups:
         if unit not in match_dict or match_dict[unit] is None:
             match_dict[unit] = "0"
+        match_dict[unit] = match_dict[unit].replace(",", "").replace(".", "")
     dur: DurationDict = {
         "years": int(match_dict["years"]),
         "days": int(match_dict["days"]),
@@ -71,18 +72,7 @@ def parse_duration(pattern: re.Pattern, duration_string: str) -> DurationDict:
         "fractional_seconds": int(match_dict["fractional_seconds"]),
         "exponent": len(match_dict["fractional_seconds"]) * -1,
     }
-    # match_dict["hours"] = match_dict["hours"].replace(",", "")
-    # match_dict["hours"] = match_dict["hours"].replace(".", "")
-    # match_dict["hours"] = int(match_dict["hours"])
-    # match_dict["minutes"] = int(match_dict["minutes"])
-    # match_dict[
-    #     "seconds"
-    # ] = f"{match_dict['seconds']}.{match_dict['fractional_seconds']}"
-    # match_dict["seconds"] = float(match_dict["seconds"])
-    # match_dict.pop("fractional_seconds")
 
-    # print(match_dict)
-    # return timedelta(**match_dict)  # type: ignore
     return dur
 
 

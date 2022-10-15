@@ -4,13 +4,13 @@ import uuid
 
 
 @dataclass
-class LogbookElement:
+class Logbook:
     uuid: str = ""
     aa_number: str = ""
     sum_of_actual_block: str = ""
     sum_of_leg_greater: str = ""
     sum_of_fly: str = ""
-    years: List["YearElement"] = field(default_factory=list)
+    years: List["Year"] = field(default_factory=list)
 
     def __post_init__(self):
         if self.uuid == "":
@@ -18,13 +18,13 @@ class LogbookElement:
 
 
 @dataclass
-class YearElement:
+class Year:
     uuid: str = ""
     year: str = ""
     sum_of_actual_block: str = ""
     sum_of_leg_greater: str = ""
     sum_of_fly: str = ""
-    months: List["MonthElement"] = field(default_factory=list)
+    months: List["Month"] = field(default_factory=list)
 
     def __post_init__(self):
         if self.uuid == "":
@@ -32,13 +32,13 @@ class YearElement:
 
 
 @dataclass
-class MonthElement:
+class Month:
     uuid: str = ""
     month_year: str = ""
     sum_of_actual_block: str = ""
     sum_of_leg_greater: str = ""
     sum_of_fly: str = ""
-    trips: List["TripElement"] = field(default_factory=list)
+    trips: List["Trip"] = field(default_factory=list)
 
     def __post_init__(self):
         if self.uuid == "":
@@ -46,7 +46,7 @@ class MonthElement:
 
 
 @dataclass
-class TripElement:
+class Trip:
     uuid: str = ""
     trip_info: str = ""
     starts_on: str = ""
@@ -56,7 +56,7 @@ class TripElement:
     sum_of_actual_block: str = ""
     sum_of_leg_greater: str = ""
     sum_of_fly: str = ""
-    duty_periods: List["DutyPeriodElement"] = field(default_factory=list)
+    duty_periods: List["DutyPeriod"] = field(default_factory=list)
 
     def __post_init__(self):
         if self.uuid == "":
@@ -64,12 +64,13 @@ class TripElement:
 
 
 @dataclass
-class DutyPeriodElement:
+class DutyPeriod:
     uuid: str = ""
+    index: str = ""
     sum_of_actual_block: str = ""
     sum_of_leg_greater: str = ""
     sum_of_fly: str = ""
-    flights: List["FlightElement"] = field(default_factory=list)
+    flights: List["Flight"] = field(default_factory=list)
 
     def __post_init__(self):
         if self.uuid == "":
@@ -77,8 +78,9 @@ class DutyPeriodElement:
 
 
 @dataclass
-class FlightElement:
+class Flight:
     uuid: str = ""
+    index: str = ""
     flight_number: str = ""
     departure_iata: str = ""
     departure_icao: str = ""
