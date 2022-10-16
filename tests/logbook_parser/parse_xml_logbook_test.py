@@ -1,5 +1,5 @@
 from pathlib import Path
-from logbook_parser.logbook_parser import parse_logbook
+from logbook_parser.parse_xml_logbook import parse_logbook
 from logbook_parser.logbook_transformations import flatten_logbook, validate_logbook
 from logbook_parser.parse_context import ParseContext
 from logbook_parser.util.dataclasses_to_csv import dataclasses_to_csv
