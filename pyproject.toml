@@ -23,6 +23,7 @@ classifiers = [
 ]
 dependencies=[
     "airportsdata",
+    "more-itertools"
 ]
 dynamic = ["version","readme"]
 

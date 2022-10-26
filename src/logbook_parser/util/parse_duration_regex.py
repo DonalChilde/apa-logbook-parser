@@ -15,23 +15,19 @@ Various duration parsing strategies using regex.
 
 import re
 
-from .duration_dict import DurationDict
+from .factored_duration import FactoredDuration
 
-# from .duration import IsoDuration
 
 HHH = r"(?P<hours>[0-9]+([,.][0-9]+)?)"
 MM = r"(?P<minutes>[0-5][0-9])"
 SS = r"(?P<seconds>[0-5][0-9])"
 FS = r"(?P<fractional_seconds>([0-9]+))"
 
-# FIXME get a dict of times first, refactor to allow timedelta or duration creation.
 
 # FIXME handle commas in matches better, eg. 2,750
-# def parse_iso_duration(duration_string: str) -> IsoDuration:
-#     pass
 
 
-def parse_duration(pattern: re.Pattern, duration_string: str) -> DurationDict:
+def parse_duration(pattern: re.Pattern, duration_string: str) -> FactoredDuration:
     """
     Parse a duration string
 
@@ -63,15 +59,15 @@ def parse_duration(pattern: re.Pattern, duration_string: str) -> DurationDict:
         if unit not in match_dict or match_dict[unit] is None:
             match_dict[unit] = "0"
         match_dict[unit] = match_dict[unit].replace(",", "").replace(".", "")
-    dur: DurationDict = {
-        "years": int(match_dict["years"]),
-        "days": int(match_dict["days"]),
-        "hours": int(match_dict["hours"]),
-        "minutes": int(match_dict["minutes"]),
-        "seconds": int(match_dict["seconds"]),
-        "fractional_seconds": int(match_dict["fractional_seconds"]),
-        "exponent": len(match_dict["fractional_seconds"]) * -1,
-    }
+    dur = FactoredDuration(
+        years=int(match_dict["years"]),
+        days=int(match_dict["days"]),
+        hours=int(match_dict["hours"]),
+        minutes=int(match_dict["minutes"]),
+        seconds=int(match_dict["seconds"]),
+        fractional_seconds=int(match_dict["fractional_seconds"]),
+        fractional_exponent=len(match_dict["fractional_seconds"]),
+    )
 
     return dur
 
