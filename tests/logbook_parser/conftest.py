@@ -29,6 +29,9 @@ def _logger(test_log_path):
     logger = rotating_file_logger(
         log_dir=log_dir, log_name=__name__, log_level=TEST_LOG_LEVEL
     )
+    target_logger = logging.getLogger("logbook_parser")
+    for handler in logger.handlers:
+        target_logger.addHandler(handler)
 
     return logger
 
