@@ -3,11 +3,16 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
 from uuid import uuid4
 from zoneinfo import ZoneInfo
+from logbook_parser.airports_db.airport import Airport
 
 import logbook_parser.models.aa_logbook as aa
 import logbook_parser.models.raw_logbook as raw
 from logbook_parser.airports_db.airports import from_iata
 from logbook_parser.parsing.parse_context import ParseContext
+from logbook_parser.util.complete_partial_datetime import (
+    complete_fwd_mdt,
+    complete_fwd_time,
+)
 from logbook_parser.util.factored_duration import FactoredDuration
 from logbook_parser.util.parse_duration_regex import parse_duration, pattern_HHHMM
 
@@ -125,7 +130,10 @@ def translate_flight(flight: raw.Flight, parse_context: ParseContext) -> aa.Flig
         departure_performance=flight.departure_performance or "0",
         arrival_airport=arrival_airport,
         # FIXME incorrect arrival time when fly is 0 eg DH
-        arrival_time=departure_local + fly,
+        # arrival_time=departure_local + fly,
+        arrival_time=parse_arrival_time(
+            departure_local, flight.arrival_local, arrival_airport
+        ),
         arrival_performance=flight.arrival_performance or "0",
         fly=fly,
         block=parse_str_dur(flight.actual_block).to_timedelta(),
@@ -137,6 +145,35 @@ def translate_flight(flight: raw.Flight, parse_context: ParseContext) -> aa.Flig
     return aa_flight
 
 
+def parse_arrival_time(
+    departure: datetime, arrival_str: str, arrival_airport: Airport
+) -> datetime:
+    try:
+        strf = "%m/%d %H:%M"
+        arrival = complete_fwd_mdt(
+            start=departure,
+            future=arrival_str,
+            tz_info=ZoneInfo(arrival_airport.tz),
+            strf=strf,
+        )
+        return arrival
+    except ValueError as error:
+        logger.error("Could not match %s as %s, %s", arrival_str, strf, error)
+        try:
+            strf = "%H:%M"
+            arrival = complete_fwd_time(
+                start=departure,
+                future=arrival_str,
+                tz_info=ZoneInfo(arrival_airport.tz),
+                strf=strf,
+            )
+            return arrival
+        except ValueError as error_2:
+            logger.debug("Could not match %s as %s, %s", arrival_str, strf, error_2)
+            logger.error("unable to calculate arrival time.")
+            raise error_2
+
+
 def parse_str_dur(duration_string: str) -> FactoredDuration:
     pattern = pattern_HHHMM(hm_sep=".")
     if duration_string is None or duration_string == "":
@@ -146,6 +183,96 @@ def parse_str_dur(duration_string: str) -> FactoredDuration:
     except TypeError:
         return FactoredDuration()
     return duration
+
+
+def complete_arrival_time(
+    departure_local: datetime,
+    raw_flight: raw.Flight,
+    aa_flight: aa.Flight,
+    position: str,
+    fly: timedelta,
+):
+    # 10/30 11:11
+    # 22:57
+    # refactor to not depend on Flight
+    dep_no_tz = departure_local.replace(tzinfo=None)
+    year_added = f"{departure_local.year}/{raw_flight.arrival_local}"
+    try:
+        partial = datetime.strptime(year_added, "%Y/%m/%d %H:%M")
+        # check if overlaps year, eg. 12/31-1/1
+        if partial < dep_no_tz:
+            partial = partial.replace(year=departure_local.year + 1)
+    except ValueError as err:
+        logger.info("Attempt alternate parse: %s", err)
+        try:
+            partial = datetime.strptime(year_added, "%Y/%H:%M")
+            partial = partial.replace(
+                month=departure_local.month, day=departure_local.day
+            )
+            # check if overlaps day, eg. 2350-0230
+            if partial.time() < departure_local.time():
+                partial = partial + timedelta(days=1)
+            # check if overlaps year, eg. 12/31-1/1
+            if partial < dep_no_tz:
+                partial = partial.replace(year=departure_local.year + 1)
+        except ValueError as err_2:
+            _ = err_2
+            logger.error(
+                "Failure to parse %s for flight %s",
+                raw_flight.arrival_local,
+                raw_flight.uuid,
+                exc_info=True,
+            )
+            return
+    if partial < dep_no_tz:
+        logger.warning("Failed to parse the arrival time for %s", raw_flight)
+        return
+    raw_flight.arrival_local = partial.isoformat()
+
+
+def complete_partial_datetime(ref_datetime: datetime, partial_string: str) -> datetime:
+    # 10/30 11:11
+    # 22:57
+    # FIXME move to snippets
+    ref_tz = ref_datetime.tzinfo
+    if ref_tz:
+        ref_no_tz = ref_datetime.replace(tzinfo=None)
+    else:
+        ref_no_tz = ref_datetime
+    year_added = f"{ref_no_tz.year}/{partial_string}"
+    try:
+        partial = datetime.strptime(year_added, "%Y/%m/%d %H:%M")
+        # check if overlaps year, eg. 12/31-1/1
+        if partial < ref_no_tz:
+            partial = partial.replace(year=ref_no_tz.year + 1)
+    except ValueError as err:
+        logger.info("%s", err)
+        try:
+            partial = datetime.strptime(year_added, "%Y/%H:%M")
+            partial = partial.replace(month=ref_no_tz.month, day=ref_no_tz.day)
+            # check if overlaps day, eg. 2350-0230
+            if partial.time() < ref_no_tz.time():
+                partial = partial + timedelta(days=1)
+            # check if overlaps year, eg. 12/31-1/1
+            if partial < ref_no_tz:
+                partial = partial.replace(year=ref_no_tz.year + 1)
+        except ValueError as err_2:
+            _ = err_2
+            logger.error(
+                "Failure to parse %s",
+                partial_string,
+                exc_info=True,
+            )
+            raise err_2
+    partial.replace(tzinfo=ref_tz)
+    if partial < ref_datetime:
+        error = ValueError(
+            f"Partial string {partial_string} parsed as {partial.isoformat()} "
+            f"does not come after ref of {ref_datetime.isoformat()}"
+        )
+        logger.error(error)
+        raise error
+    return partial
 
 
 # def complete_arrival_time_2(departure_local: datetime, flight: raw.Flight):

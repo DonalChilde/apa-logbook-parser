@@ -27,7 +27,7 @@ def test_flatten_logbook(report_data_ctx):
     assert len(flattened_data) > 100
 
 
-def test_write_flat_to_csv(report_data_ctx, test_app_data_dir: Path):
+def test_write_flat_to_csv(report_data_ctx, test_app_data_dir: Path, logger):
     with report_data_ctx as file_path:
         parse_context = ParseContext()
         data = parse_logbook(file_path, parse_context)
