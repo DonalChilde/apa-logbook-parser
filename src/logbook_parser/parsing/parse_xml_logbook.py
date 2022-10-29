@@ -6,14 +6,14 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import logbook_parser.models.raw_logbook as model
-from logbook_parser.parsing.parse_context import ParseContext
+from logbook_parser.parsing.context import Context
 from logbook_parser.util.safe_strip import safe_strip
 
 logger = logging.getLogger(__name__)
 ns = {"crystal_reports": "urn:crystal-reports:schemas:report-detail"}
 
 
-def parse_logbook(path: Path, parse_context: ParseContext) -> model.Logbook:
+def parse_logbook(path: Path, ctx: Context) -> model.Logbook:
     # print(path.resolve())
     with open(path, "r", encoding="utf-8") as xml_file:
         tree = ET.parse(xml_file)
@@ -38,11 +38,11 @@ def parse_logbook(path: Path, parse_context: ParseContext) -> model.Logbook:
             sum_of_fly=find_value(root, footer_field_path.format("SumofFly4")),
         )
         for item in root.findall("crystal_reports:Group", ns):
-            logbook.years.append(parse_year(item, parse_context))
+            logbook.years.append(parse_year(item, ctx))
         return logbook
 
 
-def logbook_stats(logbook: model.Logbook, parse_context: dict):
+def logbook_stats(logbook: model.Logbook, ctx: dict):
     """
     Logbook: total times in the 3 duration fields, total months, total dutyperiods
         total flights, total dh flights,total overnights, nights at each station.
@@ -54,7 +54,7 @@ def logbook_stats(logbook: model.Logbook, parse_context: dict):
     raise NotImplementedError
 
 
-def parse_year(element: ET.Element, parse_context: ParseContext) -> model.Year:
+def parse_year(element: ET.Element, ctx: Context) -> model.Year:
     # print('made it to year')
 
     text_path = (
@@ -72,11 +72,11 @@ def parse_year(element: ET.Element, parse_context: ParseContext) -> model.Year:
         sum_of_fly=find_value(element, field_path.format("SumofFly6")),
     )
     for item in element.findall("crystal_reports:Group", ns):
-        year.months.append(parse_month(item, parse_context))
+        year.months.append(parse_month(item, ctx))
     return year
 
 
-def parse_month(element: ET.Element, parse_context: ParseContext) -> model.Month:
+def parse_month(element: ET.Element, ctx: Context) -> model.Month:
     # print('made it to month')
 
     text_path = (
@@ -94,7 +94,7 @@ def parse_month(element: ET.Element, parse_context: ParseContext) -> model.Month
         sum_of_fly=find_value(element, field_path.format("SumofFly2")),
     )
     for item in element.findall("crystal_reports:Group", ns):
-        month.trips.append(parse_trip(item, parse_context))
+        month.trips.append(parse_trip(item, ctx))
     return month
 
 
@@ -110,7 +110,7 @@ def find_value(element: ET.Element, xpath: str) -> str:
     return ""
 
 
-def parse_trip(element: ET.Element, parse_context: ParseContext) -> model.Trip:
+def parse_trip(element: ET.Element, ctx: Context) -> model.Trip:
 
     text_path = (
         "./crystal_reports:GroupHeader/crystal_reports:Section/crystal_reports:Text"
@@ -127,39 +127,37 @@ def parse_trip(element: ET.Element, parse_context: ParseContext) -> model.Trip:
         sum_of_fly=find_value(element, field_path.format("SumofFly3")),
     )
     for index, item in enumerate(element.findall("crystal_reports:Group", ns)):
-        parse_context.extra["dutyperiod_index"] = str(index + 1)
-        trip.dutyperiods.append(parse_dutyperiod(item, parse_context))
+        ctx.extra["dutyperiod_index"] = str(index + 1)
+        trip.dutyperiods.append(parse_dutyperiod(item, ctx))
     return trip
 
 
-def parse_dutyperiod(
-    element: ET.Element, parse_context: ParseContext
-) -> model.DutyPeriod:
+def parse_dutyperiod(element: ET.Element, ctx: Context) -> model.DutyPeriod:
 
     field_path = (
         "./crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports"
         ':Field[@Name="{}"]/crystal_reports:Value'
     )
     dutyperiod = model.DutyPeriod(
-        index=parse_context.extra["dutyperiod_index"],
+        index=ctx.extra["dutyperiod_index"],
         sum_of_actual_block=find_value(element, field_path.format("SumofActualBlock1")),
         sum_of_leg_greater=find_value(element, field_path.format("SumofLegGtr1")),
         sum_of_fly=find_value(element, field_path.format("SumofFly1")),
     )
     for index, item in enumerate(element.findall("crystal_reports:Details", ns)):
-        parse_context.extra["flight_index"] = str(index + 1)
-        dutyperiod.flights.append(parse_flight(item, parse_context))
+        ctx.extra["flight_index"] = str(index + 1)
+        dutyperiod.flights.append(parse_flight(item, ctx))
     return dutyperiod
 
 
-def parse_flight(element: ET.Element, parse_context: ParseContext) -> model.Flight:
-    _ = parse_context
+def parse_flight(element: ET.Element, ctx: Context) -> model.Flight:
+    _ = ctx
     field_path = (
         "./crystal_reports:Section/crystal_reports:Field"
         "[@Name='{}']/crystal_reports:Value"
     )
     flight = model.Flight(
-        index=parse_context.extra["flight_index"],
+        index=ctx.extra["flight_index"],
         flight_number=find_value(element, field_path.format("Flt1")),
         departure_iata=find_value(element, field_path.format("DepSta1")),
         departure_local=find_value(element, field_path.format("OutDtTime1")),

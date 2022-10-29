@@ -7,7 +7,7 @@ from logbook_parser.parsing.flatten_logbook import flatten_raw_logbook
 #     flatten_logbook,
 #     validate_logbook,
 # )
-from logbook_parser.parsing.parse_context import ParseContext
+from logbook_parser.parsing.context import Context
 from logbook_parser.util.dicts_to_csv import dicts_to_csv
 from logbook_parser.parsing.flatten_logbook import flatten_raw_logbook
 import pprint
@@ -17,8 +17,8 @@ pp = pprint.PrettyPrinter(indent=2)
 
 def test_parse_xml(report_data_ctx):
     with report_data_ctx as file_path:
-        parse_context = ParseContext()
-        data = parse_logbook(file_path, parse_context)
+        ctx = Context()
+        data = parse_logbook(file_path, ctx)
         # pp.pprint(asdict(data))
         assert data.aa_number == "420357"
         # assert False
@@ -26,8 +26,8 @@ def test_parse_xml(report_data_ctx):
 
 def test_write_raw_to_csv(report_data_ctx, test_app_data_dir: Path):
     with report_data_ctx as file_path:
-        parse_context = ParseContext()
-        data = parse_logbook(file_path, parse_context)
+        ctx = Context()
+        data = parse_logbook(file_path, ctx)
     flat_data = flatten_raw_logbook(data)
     file_out = test_app_data_dir / "raw_csv_out.csv"
     dict_gen = (asdict(x) for x in flat_data)
@@ -36,8 +36,8 @@ def test_write_raw_to_csv(report_data_ctx, test_app_data_dir: Path):
 
 def test_flatten_flights(report_data_ctx):
     with report_data_ctx as file_path:
-        parse_context = ParseContext()
-        data = parse_logbook(file_path, parse_context)
+        ctx = Context()
+        data = parse_logbook(file_path, ctx)
     flat_data = flatten_raw_logbook(data)
     assert len(flat_data) > 100
 

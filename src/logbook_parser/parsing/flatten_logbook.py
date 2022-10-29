@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List
 import logbook_parser.models.raw_logbook as raw
 import logbook_parser.models.aa_logbook as aa
-from logbook_parser.parsing.parse_context import ParseContext
+from logbook_parser.parsing.context import Context
 from logbook_parser.util.factored_duration import FactoredDuration, duration_to_HHMMSS
 
 
@@ -49,9 +49,7 @@ def flatten_raw_logbook(logbook: raw.Logbook) -> List[raw.FlightRow]:
     return rows
 
 
-def flatten_aa_logbook(
-    logbook: aa.Logbook, parse_context: ParseContext
-) -> List[aa.FlightRow]:
+def flatten_aa_logbook(logbook: aa.Logbook, ctx: Context) -> List[aa.FlightRow]:
     rows: List[aa.FlightRow] = []
     for trip in logbook.trips:
         for dutyperiod in trip.dutyperiods:
@@ -62,14 +60,10 @@ def flatten_aa_logbook(
                     dutyperiod_start = ""
                 if flight is dutyperiod.flights[-1]:
                     if dutyperiod.layover:
-                        layover_duration = format_td(
-                            dutyperiod.layover.duration, parse_context
-                        )
+                        layover_duration = format_td(dutyperiod.layover.duration, ctx)
                         layover_uuid = str(dutyperiod.layover.uuid)
                     dutyperiod_end = safe_iso(dutyperiod.end)
-                    duty_time = format_td(
-                        dutyperiod.end - dutyperiod.start, parse_context
-                    )
+                    duty_time = format_td(dutyperiod.end - dutyperiod.start, ctx)
                 else:
                     dutyperiod_end = ""
                     layover_duration = ""
@@ -95,10 +89,10 @@ def flatten_aa_logbook(
                     arrival_airport=flight.arrival_airport.iata,
                     arrival_time=safe_iso(flight.arrival_time),
                     arrival_performance=flight.arrival_performance,
-                    fly=format_td(flight.fly, parse_context),
-                    leg_greater=format_td(flight.leg_greater, parse_context),
-                    actual_block=format_td(flight.block, parse_context),
-                    ground_time=format_td(flight.ground_time, parse_context),
+                    fly=format_td(flight.fly, ctx),
+                    leg_greater=format_td(flight.leg_greater, ctx),
+                    actual_block=format_td(flight.block, ctx),
+                    ground_time=format_td(flight.ground_time, ctx),
                     dutyperiod_end=dutyperiod_end,
                     duty_time=duty_time,
                     layover_duration=layover_duration,
@@ -124,7 +118,7 @@ def safe_iso(dt: datetime) -> str:
         return ""
 
 
-def format_td(delta: timedelta, parse_context: ParseContext) -> str:
+def format_td(delta: timedelta, ctx: Context) -> str:
     if delta == timedelta():
         return ""
     return duration_to_HHMMSS(**asdict(FactoredDuration.from_timedelta(delta)))
