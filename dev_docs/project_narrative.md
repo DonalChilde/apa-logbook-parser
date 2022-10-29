@@ -1,0 +1,21 @@
+# logbook-parser
+
+- A command line parser for the xml output of the APA logbook.
+- output file name includes daterange and pilot id by default
+- Save a csv file of raw parsed data.
+  - not changes to data, not even garbage correction.
+  - except dutyperiod-flt index.
+- Save a csv of translated data.
+  - allow custom duration formatting.
+  - validate parsed values as much as possible.
+  - also save separate csv of airports used, equipment flown.
+  - allow link of separate csv files by common id, eg. uuid.
+  - support message reporting to stdout of errors etc.
+  - output summary of parsed file - stdout and html?
+    - date range
+    - number of flights
+    - total time by year/month
+    - hours of deadhead
+    - hours by position
+- Save formatted copy of xml file with output.
+- Test two parses of same file are equal - testing uuids generated.
