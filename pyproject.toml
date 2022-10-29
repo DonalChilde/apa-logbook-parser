@@ -98,8 +98,8 @@ dev = [
 # ]
 
 
-# [project.scripts]
-# my-script = "my_package.module:function"
+[project.scripts]
+aa-logbook-parser = "logbook_parser.logbook_parser:cli"
 
 [tool.isort]
 profile = "black"
