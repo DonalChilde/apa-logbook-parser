@@ -101,6 +101,12 @@ class Logbook:
     airports: List[Airport] = field(default_factory=list)
     trips: List[Trip] = field(default_factory=list)
 
+    def start(self) -> datetime:
+        return self.trips[0].start
+
+    def end(self) -> datetime:
+        return self.trips[-1].end
+
 
 @dataclass
 class FlightRow:
