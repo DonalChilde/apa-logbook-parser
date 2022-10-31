@@ -1,18 +1,18 @@
+from dataclasses import asdict
 from pathlib import Path
 
 import click
 
-# To override default settings by loading from config file, see:
-# https://click.palletsprojects.com/en/8.1.x/commands/#overriding-defaults
-
-
-# @click.command()
-# @click.option("--count", default=1, help="Number of greetings.")
-# @click.option("--name", prompt="Your name", help="The person to greet.")
-# def hello(count, name):
-#     """Simple program that greets NAME for a total of COUNT times."""
-#     for _ in range(count):
-#         click.echo(f"Hello {name}!")
+from logbook_parser.models import aa_logbook as aa
+from logbook_parser.parsing.context import Context
+from logbook_parser.parsing.flatten_logbook import (
+    flatten_aa_logbook,
+    flatten_raw_logbook,
+)
+from logbook_parser.parsing.parse_xml_logbook import parse_logbook
+from logbook_parser.parsing.raw_to_aa_logbook import translate_logbook
+from logbook_parser.util.dicts_to_csv import dicts_to_csv
+from logbook_parser.util.format_xml_file import format_xml_file
 
 
 @click.group()
@@ -29,17 +29,10 @@ def cli(ctx: click.Context, debug: bool, verbose: int):
     ctx.obj["VERBOSE"] = verbose
 
 
-# @click.command()
-# @click.pass_context
-# def sync(ctx):
-#     """An example of accessing a variable passed in the context."""
-#     click.echo(f"Debug is {'on' if ctx.obj['DEBUG'] else 'off'}")
-
-
 @click.command()
 @click.pass_context
 @click.argument("file_in", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-@click.argument("file_out", type=Path)
+@click.argument("path_out", type=click.Path(file_okay=False, path_type=Path))
 @click.option(
     "--overwrite",
     "-o",
@@ -48,33 +41,48 @@ def cli(ctx: click.Context, debug: bool, verbose: int):
     show_default=True,
     help="Allow an existing file to be overwritten.",
 )
-def manipulate_file(ctx: click.Context, file_in: Path, file_out: Path, overwrite: bool):
-    """A stub for file input and output."""
-    assert isinstance(ctx, click.Context)
-    assert isinstance(file_in, Path)
-    assert isinstance(file_out, Path)
-    # Note some check done by click on file_in, but not on file_out.
-    text = file_in.read_text()
-    output_text = text + "\nFile Manipulated!\n"
-    # See also:
-    # https://click.palletsprojects.com/en/8.1.x/options/#callbacks-for-validation
-    if file_out.is_dir():
-        raise click.UsageError(f"output path: {file_out} points to a directory!")
-    if file_out.is_file():
-        if overwrite:
-            file_out.write_text(output_text)
-        else:
-            raise click.UsageError(
-                f"output path: {file_out} exists, but overwrite is {overwrite}!"
-            )
+def parse(ctx: click.Context, file_in: Path, path_out: Path, overwrite: bool):
+    """"""
+    parse_context = Context()
+    # Parse the files
+    raw_logbook = parse_logbook(file_in, ctx=parse_context)
+    aa_logbook = translate_logbook(raw_logbook, ctx=parse_context)
+    # Determine output names
+    file_prefix = logbook_effective_date_range(aa_logbook)
+    output_dir = path_out / file_prefix
+    table_dir = output_dir / "as_tables"
+    table_dir.mkdir(parents=True, exist_ok=True)
+
+    ### Output the files ###
     try:
-        file_out.parent.mkdir(exist_ok=True)
-        file_out.write_text(output_text)
-    except Exception as exc:
-        raise click.UsageError(f"Error writing file at {file_out}. {exc}")
+        # Formatted xml file
+        format_xml_file(file_in, output_dir / f"{file_prefix}_raw_data.xml")
+        # Flattened raw logbook
+        flat_raw_logbook = flatten_raw_logbook(raw_logbook)
+        raw_gen = (asdict(x) for x in flat_raw_logbook)
+        dicts_to_csv(
+            dicts=raw_gen, output_path=output_dir / f"{file_prefix}_raw_logbook.csv"
+        )
+        # Flattened aa logbook
+        flat_aa_logbook = flatten_aa_logbook(aa_logbook, ctx=parse_context)
+        aa_gen = (asdict(x) for x in flat_aa_logbook)
+        dicts_to_csv(
+            dicts=aa_gen, output_path=output_dir / f"{file_prefix}_aa_logbook.csv"
+        )
+    except ValueError as error:
+        raise click.UsageError(f"Error writing file. {error}")
+    # in subfolder, output as separate flat csvs suitable for db import?
+    #   output flattened Trip, Dutyperiod, Flight
+    #   output flattened airports
+    #   output flattened equipment
+    # output stats.txt
 
 
-cli.add_command(manipulate_file)
+def logbook_effective_date_range(aa_logbook: aa.Logbook) -> str:
+    return f"{aa_logbook.start().strftime('%Y-%m-%d')}_to_{aa_logbook.end().strftime('%Y-%m-%d')}_{aa_logbook.pilot.ident}"
 
-if __name__ == "__main__":
-    cli(obj={})
+
+cli.add_command(parse)
+
+# if __name__ == "__main__":
+#     cli(obj={})

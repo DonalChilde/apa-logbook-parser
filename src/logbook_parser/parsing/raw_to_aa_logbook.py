@@ -154,7 +154,7 @@ def parse_arrival_time(
         )
         return arrival
     except ValueError as error:
-        logger.error("Could not match %s as %s, %s", arrival_str, strf, error)
+        logger.info("Could not match %s as %s, %s", arrival_str, strf, error)
         try:
             strf = "%H:%M"
             arrival = complete_fwd_time(
@@ -165,8 +165,12 @@ def parse_arrival_time(
             )
             return arrival
         except ValueError as error_2:
-            logger.debug("Could not match %s as %s, %s", arrival_str, strf, error_2)
-            logger.error("unable to calculate arrival time.")
+            logger.error(
+                "Could not match %s as %s, %s unable to calculate arrival time.",
+                arrival_str,
+                strf,
+                error_2,
+            )
             raise error_2
 
 

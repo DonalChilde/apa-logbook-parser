@@ -44,7 +44,6 @@ def flatten_raw_logbook(logbook: raw.Logbook) -> List[raw.FlightRow]:
                             position=flight.position,
                             delay_code=flight.delay_code,
                         )
-
                         rows.append(row)
     return rows
 
