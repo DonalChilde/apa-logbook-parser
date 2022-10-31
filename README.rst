@@ -22,7 +22,7 @@ logbook-parser
 ++++++
 Status
 ++++++
-
+2022-10-31
 Works. needs documentation, export status, db suitable csv export. cli doc polish. airport_db fork with uuid - specific date capable.
 
 ++++++++++++
