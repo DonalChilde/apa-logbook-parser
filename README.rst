@@ -19,6 +19,12 @@ logbook-parser
    :target: https://github.com/python/mypy
    :alt: mypy
 
+++++++
+Status
+++++++
+
+Works. needs documentation, export status, db suitable csv export. cli doc polish. airport_db fork with uuid - specific date capable.
+
 ++++++++++++
 Installation
 ++++++++++++

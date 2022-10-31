@@ -1,13 +1,15 @@
 # Dev TODO
 
-- cli output raw csv
-  - selectable transformations, passed in parse context?
-    - name each option?
-- offer incremental options
+- Export objects as flat csvs suitable for db import.
   - raw
-  - convert durations to HH:MM:SS
-  - convert in times to iso
-  - add utc in out times
-  - add icao airport codes?
-- use dataclass field list for csv output
-  - functions to get custom field output.
+  - aa
+- offer export format options
+  - durations to HH:MM:SS
+  - datetimes to iso
+  - timezones as local
+  - airport code as iata
+- airports db fork
+  - airport has unique uuid
+  - lookup by effective date. - effective_until as utc field?
+- Enough documentation for others to use
+- GUI frontend?
