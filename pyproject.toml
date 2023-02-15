@@ -1,17 +1,16 @@
 
 [build-system]
-requires = ["setuptools >= 58.0.0"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
-name="logbook-parser"
+name = "logbook-parser"
 description = "logbook-parser_short_description"
 # readme = "README.rst"
-requires-python = ">=3.7"
-keywords = [
-    "Python",
-]
-license = {file = "LICENSE"}
+requires-python = ">=3.10"
+keywords = ["Python"]
+license = { file = "LICENSE" }
+authors = [{ name = "Chad Lowe" }, { email = "pfmsoft.dev@gmail.com" }]
 # https://pypi.org/classifiers/
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
@@ -21,76 +20,87 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
 ]
-dependencies=[
-    "airportsdata",
-    "more-itertools"
-]
-dynamic = ["version","readme"]
+dependencies = ["airportsdata", "more-itertools"]
+version = "v0.0.1"
+# dynamic = ["version", "readme"]
 
-[tool.setuptools.dynamic]
-version = {attr = "logbook_parser.__version__"}
-readme = {file = ["README.rst"]}
+# [tool.setuptools.dynamic]
+# version = { attr = "logbook_parser.__version__" }
+# readme = { file = ["README.rst"] }
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
+# [tool.setuptools.packages.find]
+# where = ["src"]
+[project.urls]
+Documentation = "https://github.com/DonalChilde/logbook-parser#readme"
+Documentation_rtd = "https://logbook-parser.readthedocs.io"
+Issues = "https://github.com/DonalChilde/logbook-parser/issues"
+Source = "https://github.com/DonalChilde/logbook-parser"
 [project.optional-dependencies]
-# build= [
-#     # Packaging and Distribution
-#     # NOTE: pip and setuptools should be installed/upgraded separately
-#     "wheel",
-#     "twine",
-#     "pip-tools",
-#     "build",
-# ]
 dev = [
-    # Packaging and Distribution
-    # NOTE: pip and setuptools should be installed/upgraded separately
-    "wheel",
-    "twine",
-    "pip-tools",
-    "build",
 
-    # Linting and Formatting
-    "black",
-    "coverage",
-    "pylint",
-    "mypy",
-    # "doc8",
-
-    # Testing
-    "tox",
-    "pytest",
-    "pytest-cov",
-
-    # Source control
+    # Automation
+    "nox",
     "pre-commit",
 
-    # Tools
-    "pysnooper",
+    # Formatting
+    "black",
+    "isort",
 
+    # Tools
+
+]
+lint = ["pylint", "mypy"]
+doc = [
     # Documentation
     "Sphinx",
     "sphinx-autobuild",
     "sphinx-autodoc-typehints",
     "sphinx_rtd_theme",
     "myst-parser",
-
-    # Vscode
-    "esbonio",
-    "rst2html",
-    "rstcheck",
+    "sphinx-click",
 ]
+vscode = ["esbonio", "rst2html", "rstcheck"]
+testing = [
+    "pytest",
+    "coverage[toml]",
+    "pygments",
+    "pytest-cov",
+    "pysnooper",
+    "devtools",
+]
+# dev = [
+#     # Packaging and Distribution
+#     # NOTE: pip and setuptools should be installed/upgraded separately
+#     "wheel",
+#     "twine",
+#     "pip-tools",
+#     "build",
 
-# documentation = [
+#     # Linting and Formatting
+#     "black",
+#     "coverage",
+#     "pylint",
+#     "mypy",
+#     # "doc8",
+
+#     # Testing
+#     "tox",
+#     "pytest",
+#     "pytest-cov",
+
+#     # Source control
+#     "pre-commit",
+
+#     # Tools
+#     "pysnooper",
+
 #     # Documentation
 #     "Sphinx",
 #     "sphinx-autobuild",
 #     "sphinx-autodoc-typehints",
 #     "sphinx_rtd_theme",
 #     "myst-parser",
-# ]
-# vscode = [
+
 #     # Vscode
 #     "esbonio",
 #     "rst2html",
@@ -126,7 +136,26 @@ target-version = ['py310']
 
 [tool.pylint.format]
 # for black compatability
-max-line-length = "88"
+max-line-length = "92"
+[tool.pylint.'MESSAGES CONTROL']
+extension-pkg-whitelist = "pydantic"
+
+
+[tool.coverage.paths]
+source = ["src", "*/site-packages"]
+tests = ["tests", "*/tests"]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+# omit the snippets directory, as they are often included without tests.
+omit = ["*/snippets/*"]
+# # fail_under = 100
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 # https://docs.pytest.org/en/6.2.x/customize.html#pyproject-toml
 # [tool.pytest.ini_options]
