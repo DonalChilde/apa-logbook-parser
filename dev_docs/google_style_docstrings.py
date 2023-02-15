@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=all
+
 """Example Google style docstrings.
 
 This module demonstrates documentation as specified by the `Google Python
@@ -75,6 +75,7 @@ def function_with_pep484_type_annotations(param1: int, param2: str) -> bool:
         The return value. True for success, False otherwise.
 
     """
+    return True
 
 
 def module_level_function(param1, param2=None, *args, **kwargs):
@@ -84,7 +85,7 @@ def module_level_function(param1, param2=None, *args, **kwargs):
     of each parameter is required. The type and description of each parameter
     is optional, but should be included if not obvious.
 
-    If \*args or \*\*kwargs are accepted,
+    If *args or **kwargs are accepted,
     they should be listed as ``*args`` and ``**kwargs``.
 
     The format for a parameter is::
@@ -242,7 +243,7 @@ class ExampleClass(object):
 
     @readwrite_property.setter
     def readwrite_property(self, value):
-        value
+        _ = value
 
     def example_method(self, param1, param2):
         """Class methods are similar to regular functions.
