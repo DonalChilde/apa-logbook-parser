@@ -1,4 +1,4 @@
-# Dev TODO
+# Dev TODO - move to github
 
 - Export objects as flat csvs suitable for db import.
   - raw

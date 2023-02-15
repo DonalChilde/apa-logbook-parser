@@ -19,5 +19,6 @@
   "esbonio.sphinx.buildDir": "${workspaceFolder}/docs/build",
   "editor.quickSuggestions": {
     "comments": "on"
-  }
+  },
+  "python.analysis.typeCheckingMode": "basic"
 }
