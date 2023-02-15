@@ -12,22 +12,23 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 #
 import os
 import sys
+from importlib.metadata import distribution
 
 sys.path.insert(0, os.path.abspath("../../src"))
-import logbook_parser  # pylint: disable=wrong-import-position
+import aa_pbs_exporter  # pylint: disable=wrong-import-position
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-
-# pylint: disable=invalid-name
-project = "logbook-parser"
-copyright = "2022" + ", " + logbook_parser.__author__  # pylint: disable=redefined-builtin
-author = logbook_parser.__author__
+distro = distribution("aa_pbs_exporter")
+print(distro)
+project = distro.metadata["Name"]
+project_copyright = f"2022, {distro.metadata['Author']}"
+author = distro.metadata["Author"]
 # The full version, including alpha/beta/rc tags.
-release = logbook_parser.__release__
+release = distro.metadata["Version"]
 # The short X.Y.Z version.
-version = logbook_parser.__version__
-# pylint: enable=invalid-name
+version = release
+
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -40,6 +41,7 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx.ext.intersphinx",
     "myst_parser",
+    "sphinx_click",
 ]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
