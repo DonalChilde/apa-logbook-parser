@@ -11,8 +11,8 @@ from logbook_parser.parsing.flatten_logbook import (
 )
 from logbook_parser.parsing.parse_xml_logbook import parse_logbook
 from logbook_parser.parsing.raw_to_aa_logbook import translate_logbook
-from logbook_parser.util.dicts_to_csv import dicts_to_csv
-from logbook_parser.util.format_xml_file import format_xml_file
+from logbook_parser.snippets.file.dicts_to_csv import dicts_to_csv
+from logbook_parser.snippets.xml.format_xml_file import format_xml_file
 
 
 @click.group()

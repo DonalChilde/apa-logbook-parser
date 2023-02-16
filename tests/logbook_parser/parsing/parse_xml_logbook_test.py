@@ -8,7 +8,7 @@ from logbook_parser.parsing.flatten_logbook import flatten_raw_logbook
 #     validate_logbook,
 # )
 from logbook_parser.parsing.context import Context
-from logbook_parser.util.dicts_to_csv import dicts_to_csv
+from logbook_parser.snippets.file.dicts_to_csv import dicts_to_csv
 from logbook_parser.parsing.flatten_logbook import flatten_raw_logbook
 import pprint
 

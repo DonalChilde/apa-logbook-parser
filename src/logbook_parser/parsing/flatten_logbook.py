@@ -4,7 +4,10 @@ from typing import List
 import logbook_parser.models.raw_logbook as raw
 import logbook_parser.models.aa_logbook as aa
 from logbook_parser.parsing.context import Context
-from logbook_parser.util.factored_duration import FactoredDuration, duration_to_HHMMSS
+from logbook_parser.snippets.datetime.factored_duration import (
+    FactoredDuration,
+    duration_to_HHMMSS,
+)
 
 
 def flatten_raw_logbook(logbook: raw.Logbook) -> List[raw.FlightRow]:

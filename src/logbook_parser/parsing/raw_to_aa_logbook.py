@@ -9,12 +9,15 @@ import logbook_parser.models.aa_logbook as aa
 import logbook_parser.models.raw_logbook as raw
 from logbook_parser.airports_db.airports import from_iata
 from logbook_parser.parsing.context import Context
-from logbook_parser.util.complete_partial_datetime import (
-    complete_fwd_mdt,
-    complete_fwd_time,
+from logbook_parser.snippets.datetime.complete_partial_datetime import (
+    complete_future_mdt,
+    complete_future_time,
 )
-from logbook_parser.util.factored_duration import FactoredDuration
-from logbook_parser.util.parse_duration_regex import parse_duration, pattern_HHHMM
+from logbook_parser.snippets.datetime.factored_duration import FactoredDuration
+from logbook_parser.snippets.datetime.parse_duration_regex import (
+    parse_duration,
+    pattern_HHHMM,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +55,6 @@ def translate_trip(trip: raw.Trip, ctx: Context) -> aa.Trip:
 
 
 def translate_dutyperiod(dutyperiod: raw.DutyPeriod, ctx: Context) -> aa.DutyPeriod:
-
     aa_flights: List[aa.Flight] = []
     for flight in dutyperiod.flights:
         aa_flights.append(translate_flight(flight, ctx))
@@ -144,9 +146,9 @@ def translate_flight(flight: raw.Flight, ctx: Context) -> aa.Flight:
 def parse_arrival_time(
     departure: datetime, arrival_str: str, arrival_airport: Airport
 ) -> datetime:
+    strf = "%m/%d %H:%M"
     try:
-        strf = "%m/%d %H:%M"
-        arrival = complete_fwd_mdt(
+        arrival = complete_future_mdt(
             start=departure,
             future=arrival_str,
             tz_info=ZoneInfo(arrival_airport.tz),
@@ -157,7 +159,7 @@ def parse_arrival_time(
         logger.info("Could not match %s as %s, %s", arrival_str, strf, error)
         try:
             strf = "%H:%M"
-            arrival = complete_fwd_time(
+            arrival = complete_future_time(
                 start=departure,
                 future=arrival_str,
                 tz_info=ZoneInfo(arrival_airport.tz),

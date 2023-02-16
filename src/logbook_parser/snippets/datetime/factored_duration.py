@@ -1,8 +1,16 @@
-from dataclasses import dataclass, asdict
+####################################################
+#                                                  #
+#    src/snippets/datetime/factored_duration.py
+#                                                  #
+####################################################
+# Created by: Chad Lowe                            #
+# Created on: 2022-12-03T17:59:04-07:00            #
+# Last Modified: 2022-12-04T01:00:32.152328+00:00  #
+# Source: https://github.com/DonalChilde/snippets  #
+####################################################
+from dataclasses import asdict, dataclass
 from datetime import timedelta
 from decimal import Decimal
-from typing import Dict
-
 
 SECONDS_IN_HOUR = 60 * 60
 SECONDS_IN_DAY = 24 * SECONDS_IN_HOUR
@@ -21,9 +29,6 @@ class FactoredDuration:
     fractional_seconds: int = 0
     # fractional_exponent should be => magnitude of fractional seconds
     fractional_exponent: int = 1
-
-    def asdict(self) -> Dict:
-        return asdict(self)
 
     def seconds_as_Decimal(self) -> Decimal:
         return Decimal(self.seconds_as_str())
