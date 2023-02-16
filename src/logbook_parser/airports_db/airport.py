@@ -15,9 +15,10 @@ class Airport:
     city: str
     subd: str
     country: str
-    elevation: int
+    elevation: float
     lat: str
     lon: str
     tz: str
+    lid: str
     uuid: UUID = field(default_factory=uuid4)
     valid_from: datetime = field(default_factory=default_date)

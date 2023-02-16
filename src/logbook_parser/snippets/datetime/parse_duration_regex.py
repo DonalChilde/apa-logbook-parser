@@ -5,7 +5,7 @@
 ####################################################
 # Created by: Chad Lowe                            #
 # Created on: 2022-09-28T17:11:31-07:00            #
-# Last Modified: _iso_date_         #
+# Last Modified: 2022-12-04T01:14:36.877968+00:00  #
 # Source: https://github.com/DonalChilde/snippets  #
 ####################################################
 
@@ -15,8 +15,7 @@ Various duration parsing strategies using regex.
 
 import re
 
-from .factored_duration import FactoredDuration
-
+from logbook_parser.snippets.datetime.factored_duration import FactoredDuration
 
 HHH = r"(?P<hours>[0-9]+([,.][0-9]+)?)"
 MM = r"(?P<minutes>[0-5][0-9])"

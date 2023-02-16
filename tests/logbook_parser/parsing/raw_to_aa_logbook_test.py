@@ -5,7 +5,7 @@ from logbook_parser.parsing.flatten_logbook import flatten_aa_logbook
 from logbook_parser.parsing.raw_to_aa_logbook import translate_logbook
 from logbook_parser.parsing.context import Context
 from logbook_parser.parsing.parse_xml_logbook import parse_logbook
-from logbook_parser.util.dicts_to_csv import dicts_to_csv
+from logbook_parser.snippets.file.dicts_to_csv import dicts_to_csv
 
 
 # base

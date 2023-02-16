@@ -9,7 +9,8 @@
 # Source: https://github.com/DonalChilde/snippets  #
 ####################################################
 from pathlib import Path
-from .validate_file_out import validate_file_out
+
+from logbook_parser.snippets.file.validate_file_out import validate_file_out
 
 
 def remove_blank_lines(input_path: Path, output_path: Path, overwrite: bool = False):
