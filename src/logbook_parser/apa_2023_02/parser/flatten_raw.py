@@ -8,12 +8,10 @@ from logbook_parser.apa_2023_02.models.raw import (
     Year,
 )
 
-# FIXME dp_index and row_idx are not in order.
-
 
 def flatten_logbook(logbook: Logbook) -> list[FlightRow]:
     rows = []
-    last_row_index = 1
+    last_row_index = 0
     for year in logbook.years:
         flat = flatten_year(
             year=year,
