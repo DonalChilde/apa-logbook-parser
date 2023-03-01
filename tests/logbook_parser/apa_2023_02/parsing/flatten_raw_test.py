@@ -7,7 +7,7 @@ from logbook_parser.apa_2023_02.parser.flatten_raw import flatten_logbook
 
 def test_flatten_logbook(report_data_ctx, test_app_data_dir: Path):
     with report_data_ctx as filepath:
-        element_tree = parser.read_logbook_xml_file(filepath=filepath)
+        element_tree = parser.read_logbook_xml_file(file_path=filepath)
         # ctx = ParseContext(source=str(filepath), extra={})
         logbook = parser.parse_logbook_xml_tree(element_tree=element_tree)
         flattened = flatten_logbook(logbook)
