@@ -12,6 +12,7 @@ class Instant(BaseModel):
 
 
 class Flight(BaseModel):
+    idx: int
     flight_number: str
     departure_iata: str
     departure_time: Instant
@@ -34,6 +35,7 @@ class Flight(BaseModel):
 
 
 class DutyPeriod(BaseModel):
+    idx: int
     flights: list[Flight]
 
 
@@ -52,10 +54,10 @@ class Month(BaseModel):
 
 class Year(BaseModel):
     year: int
-    months: list[Month]
+    months: dict[int, Month]
 
 
 class Logbook(BaseModel):
     metadata: ParsedMetadata | None
     aa_number: str
-    years: list[Year]
+    years: dict[int, Year]
