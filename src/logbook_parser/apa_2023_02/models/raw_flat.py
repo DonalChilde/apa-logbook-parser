@@ -32,7 +32,7 @@ class RawFlightRow(BaseModel):
     delay_code: str
     fuel_performance: str
     row_uuid: str
-    metadata: str
+    metadata: str = ""
 
     def get_uuid(self) -> UUID:
         raise NotImplementedError
