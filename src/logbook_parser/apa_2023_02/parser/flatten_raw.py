@@ -1,99 +1,99 @@
 from logbook_parser.apa_2023_02.models.raw import (
     DutyPeriod,
     Flight,
-    FlightRow,
     Logbook,
     Month,
     Trip,
     Year,
 )
+from logbook_parser.apa_2023_02.models.raw_flat import RawFlightRow
 
 
-def flatten_logbook(logbook: Logbook) -> list[FlightRow]:
+def flatten_logbook(logbook: Logbook) -> list[RawFlightRow]:
     rows = []
-    last_row_index = 0
+    prev_row_index = 0
     for year in logbook.years:
         flat = flatten_year(
             year=year,
-            last_row_idx=last_row_index,
+            prev_row_idx=prev_row_index,
             aa_number=logbook.aa_number,
         )
-        last_row_index = flat[-1].row_idx
+        prev_row_index = flat[-1].row_idx
         rows.extend(flat)
     return rows
 
 
 def flatten_year(
     year: Year,
-    last_row_idx: int,
+    prev_row_idx: int,
     aa_number: str,
-) -> list[FlightRow]:
+) -> list[RawFlightRow]:
     rows = []
     for month in year.months:
         flat = flatten_month(
             month=month,
-            last_row_idx=last_row_idx,
+            prev_row_idx=prev_row_idx,
             aa_number=aa_number,
             year=year.year,
         )
-        last_row_idx = flat[-1].row_idx
+        prev_row_idx = flat[-1].row_idx
         rows.extend(flat)
     return rows
 
 
 def flatten_month(
     month: Month,
-    last_row_idx: int,
+    prev_row_idx: int,
     aa_number: str,
     year: str,
-) -> list[FlightRow]:
+) -> list[RawFlightRow]:
     rows = []
     for trip in month.trips:
         flat = flatten_trip(
             trip=trip,
-            last_row_idx=last_row_idx,
+            prev_row_idx=prev_row_idx,
             aa_number=aa_number,
             year=year,
             month_year=month.month_year,
         )
-        last_row_idx = flat[-1].row_idx
+        prev_row_idx = flat[-1].row_idx
         rows.extend(flat)
     return rows
 
 
 def flatten_trip(
     trip: Trip,
-    last_row_idx: int,
+    prev_row_idx: int,
     aa_number: str,
     year: str,
     month_year: str,
-) -> list[FlightRow]:
+) -> list[RawFlightRow]:
     rows = []
     for dutyperiod in trip.duty_periods:
         flat = flatten_dutyperiod(
             dutyperiod=dutyperiod,
-            last_row_idx=last_row_idx,
+            prev_row_idx=prev_row_idx,
             aa_number=aa_number,
             year=year,
             month_year=month_year,
             trip_info=trip.trip_info,
         )
         # TODO what if no flights in a dutyperiod
-        last_row_idx = flat[-1].row_idx
+        prev_row_idx = flat[-1].row_idx
         rows.extend(flat)
     return rows
 
 
 def flatten_dutyperiod(
     dutyperiod: DutyPeriod,
-    last_row_idx: int,
+    prev_row_idx: int,
     aa_number: str,
     year: str,
     month_year: str,
     trip_info: str,
-) -> list[FlightRow]:
+) -> list[RawFlightRow]:
     rows = []
-    for row_idx, flight in enumerate(dutyperiod.flights, start=last_row_idx + 1):
+    for row_idx, flight in enumerate(dutyperiod.flights, start=prev_row_idx + 1):
         row = make_row(
             flight=flight,
             row_idx=row_idx,
@@ -116,7 +116,7 @@ def make_row(
     trip_info: str,
     dp_idx: int,
 ):
-    flight_row = FlightRow(
+    flight_row = RawFlightRow(
         row_idx=row_idx,
         aa_number=aa_number,
         year=year,

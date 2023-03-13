@@ -1,20 +1,43 @@
 import logging
 import xml.etree.ElementTree as ET
 from pathlib import Path
+import hashlib
 
 from logbook_parser.apa_2023_02.models import raw
+from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata, HashedFile
+from logbook_parser.snippets.hash.file_hash import make_hashed_file
 
 logger = logging.getLogger(__name__)
 NS = {"crystal_reports": "urn:crystal-reports:schemas:report-detail"}
 
 
-def read_logbook_xml_file(filepath: Path) -> ET.ElementTree:
-    with open(filepath, "r", encoding="utf-8") as xml_file:
+def parse_logbook(file_path: Path) -> raw.Logbook:
+    hashed_file = make_hashed_file(file_path=file_path, hasher=hashlib.md5())
+
+    metadata = ParsedMetadata(
+        original_source=HashedFile(
+            file_path=hashed_file.file_path,
+            file_hash=hashed_file.file_hash,
+            hash_method=hashed_file.hash_method,
+        ),
+        source=None,
+        data_model_name="raw",
+        data_model_version="v1.0",
+    )
+    element_tree = read_logbook_xml_file(file_path=file_path)
+    logbook = parse_logbook_xml_tree(element_tree=element_tree, metadata=metadata)
+    return logbook
+
+
+def read_logbook_xml_file(file_path: Path) -> ET.ElementTree:
+    with open(file_path, "r", encoding="utf-8") as xml_file:
         tree = ET.parse(xml_file)
     return tree
 
 
-def parse_logbook_xml_tree(element_tree: ET.ElementTree) -> raw.Logbook:
+def parse_logbook_xml_tree(
+    element_tree: ET.ElementTree, metadata: ParsedMetadata | None = None
+) -> raw.Logbook:
     root: ET.Element = element_tree.getroot()
     header_field_path = (
         "./crystal_reports:ReportHeader/crystal_reports:Section/crystal_reports"
@@ -25,6 +48,7 @@ def parse_logbook_xml_tree(element_tree: ET.ElementTree) -> raw.Logbook:
         ':Field[@Name="{}"]/crystal_reports:Value'
     )
     logbook = raw.Logbook(
+        metadata=metadata,
         aa_number=find_text_value(
             root, header_field_path.format("EmpNum1"), namespaces=NS
         ),
@@ -127,11 +151,11 @@ def parse_trip(element: ET.Element) -> raw.Trip:
     for idx, item in enumerate(
         element.findall("crystal_reports:Group", namespaces=NS), start=1
     ):
-        trip.duty_periods.append(parse_dutyperiod(item, str(idx)))
+        trip.duty_periods.append(parse_dutyperiod(item, idx))
     return trip
 
 
-def parse_dutyperiod(element: ET.Element, dutyperiod_idx: str) -> raw.DutyPeriod:
+def parse_dutyperiod(element: ET.Element, dutyperiod_idx: int) -> raw.DutyPeriod:
     field_path = (
         "./crystal_reports:GroupFooter/crystal_reports:Section/crystal_reports"
         ':Field[@Name="{}"]/crystal_reports:Value'
@@ -152,11 +176,11 @@ def parse_dutyperiod(element: ET.Element, dutyperiod_idx: str) -> raw.DutyPeriod
     for idx, item in enumerate(
         element.findall("crystal_reports:Details", namespaces=NS), start=1
     ):
-        dutyperiod.flights.append(parse_flight(item, str(idx)))
+        dutyperiod.flights.append(parse_flight(item, idx))
     return dutyperiod
 
 
-def parse_flight(element: ET.Element, flight_idx: str) -> raw.Flight:
+def parse_flight(element: ET.Element, flight_idx: int) -> raw.Flight:
     field_path = (
         "./crystal_reports:Section/crystal_reports:Field"
         "[@Name='{}']/crystal_reports:Value"
