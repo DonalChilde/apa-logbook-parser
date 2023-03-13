@@ -4,10 +4,7 @@ from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
 
 
 class RawFlightRow(BaseModel):
-    """Represents a flattened model of Logbook.
-
-    TODO needs refinement, include all fields, e.g. logten pro
-    """
+    """Represents a flattened model of Logbook."""
 
     row_idx: int
     aa_number: str
@@ -35,6 +32,7 @@ class RawFlightRow(BaseModel):
     delay_code: str
     fuel_performance: str
     row_uuid: str
+    metadata: str
 
     def get_uuid(self) -> UUID:
         raise NotImplementedError

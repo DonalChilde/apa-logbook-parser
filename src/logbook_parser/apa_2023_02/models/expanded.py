@@ -3,6 +3,8 @@ from pydantic import BaseModel
 
 from datetime import date, datetime, timedelta
 
+from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
+
 
 class Instant(BaseModel):
     utc_date: datetime
@@ -54,5 +56,6 @@ class Year(BaseModel):
 
 
 class Logbook(BaseModel):
+    metadata: ParsedMetadata | None
     aa_number: str
     years: list[Year]
