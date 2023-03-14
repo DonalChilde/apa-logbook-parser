@@ -87,23 +87,15 @@ def expand_flight(raw_flight: raw.Flight) -> expanded.Flight:
         departure_time=parse_departure_time(raw_flight),
         arrival_iata=raw_flight.arrival_iata,
         arrival_time=DEFAULT_INSTANT,
-        fly=parse_duration(DURATION_PATTERN, raw_flight.fly).to_timedelta(),
-        leg_greater=parse_duration(
-            DURATION_PATTERN, raw_flight.leg_greater
-        ).to_timedelta(),
-        actual_block=parse_duration(
-            DURATION_PATTERN, raw_flight.actual_block
-        ).to_timedelta(),
+        fly=parse_log_duration(raw_flight.fly),
+        leg_greater=parse_log_duration(raw_flight.leg_greater),
+        actual_block=parse_log_duration(raw_flight.actual_block),
         eq_model=raw_flight.eq_model,
         eq_number=raw_flight.eq_number,
         eq_type=raw_flight.eq_type,
         eq_code=raw_flight.eq_code,
-        ground_time=parse_duration(
-            DURATION_PATTERN, raw_flight.ground_time
-        ).to_timedelta(),
-        overnight_duration=parse_duration(
-            DURATION_PATTERN, raw_flight.overnight_duration
-        ).to_timedelta(),
+        ground_time=parse_log_duration(raw_flight.ground_time),
+        overnight_duration=parse_log_duration(raw_flight.overnight_duration),
         fuel_performance=raw_flight.fuel_performance,
         departure_performance=parse_performance(raw_flight.departure_performance),
         arrival_performance=parse_performance(raw_flight.arrival_performance),
@@ -155,7 +147,7 @@ def parse_arrival_time(
         arrival_time = dt_time(
             hour=parsed_arrival.tm_hour, minute=parsed_arrival.tm_min
         )
-        return instant_from_next_time(arrival, next_time=arrival_time)
+        return instant_from_next_time(arrival, next_time=arrival_time, next_tz=tz_name)
     except ValueError:
         # TODO what does this raise?
         # moving on to try alternate data format
@@ -163,7 +155,7 @@ def parse_arrival_time(
     # 05:13
     parsed_arrival = time.strptime(raw_flight.arrival_local, "%H:%M")
     arrival_time = dt_time(hour=parsed_arrival.tm_hour, minute=parsed_arrival.tm_min)
-    return instant_from_next_time(arrival, next_time=arrival_time)
+    return instant_from_next_time(arrival, next_time=arrival_time, next_tz=tz_name)
 
 
 def instant_from_duration(
@@ -174,7 +166,7 @@ def instant_from_duration(
     return result
 
 
-def instant_from_next_time(start: datetime, next_time: dt_time):
+def instant_from_next_time(start: datetime, next_time: dt_time, next_tz: str):
     end = start.replace(
         hour=next_time.hour,
         minute=next_time.minute,
@@ -184,10 +176,19 @@ def instant_from_next_time(start: datetime, next_time: dt_time):
     if start < end:
         end = end + timedelta(hours=24)
 
-    return expanded.Instant(
-        utc_date=end.astimezone(tz=timezone.utc), local_tz=str(end.tzname())
-    )
+    return expanded.Instant(utc_date=end.astimezone(tz=timezone.utc), local_tz=next_tz)
 
 
 def parse_performance(dur: str) -> timedelta:
+    if not dur:
+        return timedelta()
     return timedelta(minutes=int(dur))
+
+
+def parse_log_duration(dur: str) -> timedelta:
+    if not dur:
+        return timedelta()
+    if "." not in dur:
+        return timedelta()
+    parsed = parse_duration(pattern=DURATION_PATTERN, duration_string=dur)
+    return timedelta(hours=parsed.hours, minutes=parsed.minutes)
