@@ -140,14 +140,18 @@ def parse_arrival_time(
     expanded_flight: expanded.Flight, raw_flight: raw.Flight
 ) -> expanded.Instant:
     tz_name = from_iata(raw_flight.arrival_iata, date=None).tz
-    arrival = expanded_flight.departure_time.utc_date.astimezone(tz=ZoneInfo(tz_name))
+    departure_in_arrival_tz = expanded_flight.departure_time.utc_date.astimezone(
+        tz=ZoneInfo(tz_name)
+    )
     try:
         # 09/17 05:13
         parsed_arrival = time.strptime(raw_flight.arrival_local, "%m/%y %H:%M")
         arrival_time = dt_time(
             hour=parsed_arrival.tm_hour, minute=parsed_arrival.tm_min
         )
-        return instant_from_next_time(arrival, next_time=arrival_time, next_tz=tz_name)
+        return instant_from_next_time(
+            departure_in_arrival_tz, next_time=arrival_time, next_tz=tz_name
+        )
     except ValueError:
         # TODO what does this raise?
         # moving on to try alternate data format
@@ -155,7 +159,9 @@ def parse_arrival_time(
     # 05:13
     parsed_arrival = time.strptime(raw_flight.arrival_local, "%H:%M")
     arrival_time = dt_time(hour=parsed_arrival.tm_hour, minute=parsed_arrival.tm_min)
-    return instant_from_next_time(arrival, next_time=arrival_time, next_tz=tz_name)
+    return instant_from_next_time(
+        departure_in_arrival_tz, next_time=arrival_time, next_tz=tz_name
+    )
 
 
 def instant_from_duration(
@@ -173,7 +179,7 @@ def instant_from_next_time(start: datetime, next_time: dt_time, next_tz: str):
         second=next_time.second,
         microsecond=next_time.microsecond,
     )
-    if start < end:
+    if start > end:
         end = end + timedelta(hours=24)
 
     return expanded.Instant(utc_date=end.astimezone(tz=timezone.utc), local_tz=next_tz)
