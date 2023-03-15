@@ -1,17 +1,63 @@
-from pydantic import BaseModel
-
+from operator import attrgetter
+from typing import Iterable
+from pydantic import BaseModel as PydanticBaseModel
+from zoneinfo import ZoneInfo
 
 from datetime import date, datetime, timedelta
 
 from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
+from logbook_parser.snippets.datetime.factored_duration import FactoredDuration
+
+
+# def serialize_timedelta(td: timedelta) -> str:
+#     factored = FactoredDuration.from_timedelta(td)
+#     result = f"{(factored.days*24)+factored.hours}:{factored.minutes}:00"
+#     if factored.is_negative:
+#         return f"-{result}"
+#     return result
+
+
+def deserialize_HHMMSS(td) -> timedelta:
+    if isinstance(td, timedelta):
+        print(td, type(td))
+        return td
+    split_td = td.split(":")
+    negative = False
+    hours = int(split_td[0])
+    if "-" in split_td[0]:
+        negative = True
+    seconds = 0
+    seconds = seconds + abs(hours) * 60 * 60
+    print(seconds)
+    seconds = seconds + int(split_td[1]) * 60
+    seconds = seconds + int(split_td[2])
+    if negative:
+        seconds = seconds * -1
+    return timedelta(seconds=seconds)
+
+
+class BaseModel(PydanticBaseModel):
+    """
+    All the instances of BaseModel should serialize
+    those types the same way
+    """
+
+    # class Config:
+    #     json_encoders = {
+    #         timedelta: serialize_timedelta,
+    #     }
 
 
 class Instant(BaseModel):
     utc_date: datetime
     local_tz: str
 
+    def local(self) -> datetime:
+        return self.utc_date.astimezone(tz=ZoneInfo(self.local_tz))
+
 
 class Flight(BaseModel):
+    idx: int
     flight_number: str
     departure_iata: str
     departure_time: Instant
@@ -34,6 +80,7 @@ class Flight(BaseModel):
 
 
 class DutyPeriod(BaseModel):
+    idx: int
     flights: list[Flight]
 
 
@@ -44,6 +91,12 @@ class Trip(BaseModel):
     bid_equipment: str
     duty_periods: list[DutyPeriod]
 
+    def first_start(self) -> datetime:
+        flights: list[Flight] = sorted(
+            self.duty_periods[0].flights, key=attrgetter("departure_time.utc_date")
+        )
+        return flights[0].departure_time.utc_date
+
 
 class Month(BaseModel):
     month: int
@@ -52,10 +105,16 @@ class Month(BaseModel):
 
 class Year(BaseModel):
     year: int
-    months: list[Month]
+    months: dict[int, Month]
 
 
 class Logbook(BaseModel):
     metadata: ParsedMetadata | None
     aa_number: str
-    years: list[Year]
+    years: dict[int, Year]
+
+    def trips(self) -> Iterable[Trip]:
+        for year in self.years.values():
+            for month in year.months.values():
+                for trip in month.trips:
+                    yield trip
