@@ -1,5 +1,8 @@
+from typing import Iterator
 from uuid import UUID
+
 from pydantic import BaseModel
+
 from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
 
 
@@ -36,3 +39,15 @@ class RawFlightRow(BaseModel):
 
     def get_uuid(self) -> UUID:
         raise NotImplementedError
+
+
+class FlatLogbook(BaseModel):
+    metadata: ParsedMetadata | None
+    rows: list[RawFlightRow]
+
+    def as_dicts(self) -> Iterator[dict]:
+        for idx, row in enumerate(self.rows):
+            if idx == 0:
+                if self.metadata is not None:
+                    row.metadata = self.metadata.json()
+            yield row.dict()

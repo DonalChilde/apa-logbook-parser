@@ -1,59 +1,36 @@
 from datetime import timedelta
+from operator import methodcaller
+
 from logbook_parser.apa_2023_02.models import expanded
 from logbook_parser.apa_2023_02.models.expanded_flat import (
     ExpandedFlatLogbook,
-    ExpandedFlatRow,
+    ExpandedFlightRow,
 )
-
-
 from logbook_parser.snippets.datetime.factored_duration import FactoredDuration
 
 
 def serialize_timedelta(td: timedelta) -> str:
     factored = FactoredDuration.from_timedelta(td)
-    result = f"{(factored.days*24)+factored.hours}:{factored.minutes}:00"
+    result = f"{((factored.days*24)+factored.hours):02d}:{factored.minutes:02d}:00"
     if factored.is_negative:
         return f"-{result}"
     return result
 
 
-def flatten_logbook(expanded_log: expanded.Logbook) -> ExpandedFlatLogbook:
-    flat_log = ExpandedFlatLogbook(metadata=expanded_log.metadata, rows=[])
-    return flat_log
-
-
-def flatten_year(aa_number: str, year: expanded.Year) -> list[ExpandedFlatRow]:
-    raise NotImplementedError
-
-
-def flatten_month(
-    aa_number: str, year: int, month: expanded.Month
-) -> list[ExpandedFlatRow]:
-    raise NotImplementedError
-
-
-def flatten_trip(aa_number: str, year: int, month: int) -> list[ExpandedFlatRow]:
-    raise NotImplementedError
-
-
 def make_row(
     row_idx: int,
     aa_number: str,
-    year: int,
-    month: int,
-    trip_start: str,
+    trip_start_lcl: str,
     trip_number: str,
     bid_equipment: str,
     base: str,
     dp_idx: int,
     flight: expanded.Flight,
-) -> ExpandedFlatRow:
-    row = ExpandedFlatRow(
+) -> ExpandedFlightRow:
+    row = ExpandedFlightRow(
         row_idx=row_idx,
         aa_number=aa_number,
-        year=year,
-        month=month,
-        trip_start=trip_start,
+        trip_start_lcl=trip_start_lcl,
         trip_number=trip_number,
         bid_equipment=bid_equipment,
         base=base,
@@ -88,28 +65,35 @@ def make_row(
     return row
 
 
-# TODO use a class to maintain state? row_idx?
 class LogbookFlattener:
     def __init__(self) -> None:
         self.row_idx = 1
 
     def flatten_logbook(self, expanded_log: expanded.Logbook) -> ExpandedFlatLogbook:
         flat_log = ExpandedFlatLogbook(metadata=expanded_log.metadata, rows=[])
+        trips = sorted(expanded_log.trips(), key=methodcaller("first_start"))
+        for trip in trips:
+            flat_log.rows.extend(
+                self.flatten_trip(aa_number=expanded_log.aa_number, trip=trip)
+            )
         return flat_log
 
-    def flatten_year(
-        self, aa_number: str, year: expanded.Year
-    ) -> list[ExpandedFlatRow]:
-        raise NotImplementedError
-
-    def flatten_month(
-        self, aa_number: str, year: int, month: expanded.Month
-    ) -> list[ExpandedFlatRow]:
-        raise NotImplementedError
-
     def flatten_trip(
-        self, aa_number: str, year: int, month: int, trip: expanded.Trip
-    ) -> list[ExpandedFlatRow]:
-        for dutyperiod in trip:
-            pass
-        raise NotImplementedError
+        self, aa_number: str, trip: expanded.Trip
+    ) -> list[ExpandedFlightRow]:
+        rows: list[ExpandedFlightRow] = []
+        for dutyperiod in trip.duty_periods:
+            for flight in dutyperiod.flights:
+                row = make_row(
+                    row_idx=self.row_idx,
+                    aa_number=aa_number,
+                    trip_start_lcl=trip.start_date.isoformat(),
+                    trip_number=trip.trip_number,
+                    bid_equipment=trip.bid_equipment,
+                    base=trip.base,
+                    dp_idx=dutyperiod.idx,
+                    flight=flight,
+                )
+                self.row_idx += 1
+                rows.append(row)
+        return rows

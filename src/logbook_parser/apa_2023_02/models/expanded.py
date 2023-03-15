@@ -1,6 +1,6 @@
+from operator import attrgetter
+from typing import Iterable
 from pydantic import BaseModel as PydanticBaseModel
-from pydantic import validator
-from pydantic.json import timedelta_isoformat
 from zoneinfo import ZoneInfo
 
 from datetime import date, datetime, timedelta
@@ -9,12 +9,12 @@ from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
 from logbook_parser.snippets.datetime.factored_duration import FactoredDuration
 
 
-def serialize_timedelta(td: timedelta) -> str:
-    factored = FactoredDuration.from_timedelta(td)
-    result = f"{(factored.days*24)+factored.hours}:{factored.minutes}:00"
-    if factored.is_negative:
-        return f"-{result}"
-    return result
+# def serialize_timedelta(td: timedelta) -> str:
+#     factored = FactoredDuration.from_timedelta(td)
+#     result = f"{(factored.days*24)+factored.hours}:{factored.minutes}:00"
+#     if factored.is_negative:
+#         return f"-{result}"
+#     return result
 
 
 def deserialize_HHMMSS(td) -> timedelta:
@@ -78,26 +78,6 @@ class Flight(BaseModel):
     position: str
     delay_code: str
 
-    # _deserialize_fly = validator("fly", allow_reuse=True)(deserialize_HHMMSS)
-    # _deserialize_leg_greater = validator("leg_greater", allow_reuse=True)(
-    #     deserialize_HHMMSS
-    # )
-    # _deserialize_actual_block = validator("actual_block", allow_reuse=True)(
-    #     deserialize_HHMMSS
-    # )
-    # _deserialize_ground_time = validator("ground_time", allow_reuse=True)(
-    #     deserialize_HHMMSS
-    # )
-    # _deserialize_overnight_duration = validator("overnight_duration", allow_reuse=True)(
-    #     deserialize_HHMMSS
-    # )
-    # _deserialize_HHMMSS_departure_performance = validator(
-    #     "departure_performance", allow_reuse=True
-    # )(deserialize_HHMMSS)
-    # _deserialize_arrival_performance = validator(
-    #     "arrival_performance", allow_reuse=True
-    # )(deserialize_HHMMSS)
-
 
 class DutyPeriod(BaseModel):
     idx: int
@@ -110,6 +90,12 @@ class Trip(BaseModel):
     base: str
     bid_equipment: str
     duty_periods: list[DutyPeriod]
+
+    def first_start(self) -> datetime:
+        flights: list[Flight] = sorted(
+            self.duty_periods[0].flights, key=attrgetter("departure_time.utc_date")
+        )
+        return flights[0].departure_time.utc_date
 
 
 class Month(BaseModel):
@@ -126,3 +112,9 @@ class Logbook(BaseModel):
     metadata: ParsedMetadata | None
     aa_number: str
     years: dict[int, Year]
+
+    def trips(self) -> Iterable[Trip]:
+        for year in self.years.values():
+            for month in year.months.values():
+                for trip in month.trips:
+                    yield trip

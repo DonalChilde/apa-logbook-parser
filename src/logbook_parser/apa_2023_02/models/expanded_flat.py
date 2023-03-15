@@ -1,15 +1,13 @@
-from datetime import date
-from uuid import UUID
+from typing import Iterator
 from pydantic import BaseModel
+
 from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
 
 
-class ExpandedFlatRow(BaseModel):
+class ExpandedFlightRow(BaseModel):
     row_idx: int
     aa_number: str
-    year: int
-    month: int
-    trip_start: str
+    trip_start_lcl: str
     trip_number: str
     bid_equipment: str
     base: str
@@ -44,4 +42,11 @@ class ExpandedFlatRow(BaseModel):
 
 class ExpandedFlatLogbook(BaseModel):
     metadata: ParsedMetadata | None
-    rows: ExpandedFlatRow
+    rows: list[ExpandedFlightRow]
+
+    def as_dicts(self) -> Iterator[dict]:
+        for idx, row in enumerate(self.rows):
+            if idx == 0:
+                if self.metadata is not None:
+                    row.metadata = self.metadata.json()
+            yield row.dict()
