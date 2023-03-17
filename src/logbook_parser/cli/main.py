@@ -1,9 +1,10 @@
 import logging
 from pathlib import Path
 from time import perf_counter_ns
-from logbook_parser.cli.parse import parse
 
 import click
+
+from logbook_parser.cli.parse import parse
 
 PROJECT_SLUG = "unique_name_for_project"
 APP_DIR = click.get_app_dir(PROJECT_SLUG)

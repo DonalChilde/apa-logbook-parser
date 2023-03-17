@@ -1,9 +1,12 @@
+from pathlib import Path
 from typing import Iterator
 from uuid import UUID
 
 from pydantic import BaseModel
 
 from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
+from logbook_parser.snippets.file.dicts_to_csv import DictToCsvMixin
+from logbook_parser.snippets.file.json_mixin import JsonMixin
 
 
 class RawFlightRow(BaseModel):
@@ -34,20 +37,25 @@ class RawFlightRow(BaseModel):
     overnight_duration: str
     delay_code: str
     fuel_performance: str
-    row_uuid: str
+    uuid: str
     metadata: str = ""
 
     def get_uuid(self) -> UUID:
         raise NotImplementedError
 
 
-class FlatLogbook(BaseModel):
+class FlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
     metadata: ParsedMetadata | None
     rows: list[RawFlightRow]
 
-    def as_dicts(self) -> Iterator[dict]:
+    def as_dicts(self, *args, **kwargs) -> Iterator[dict]:
         for idx, row in enumerate(self.rows):
             if idx == 0:
                 if self.metadata is not None:
                     row.metadata = self.metadata.json()
             yield row.dict()
+
+    # def as_csv(self, file_path: Path, overwrite: bool):
+    #     dicts_to_csv(
+    #         dicts=self.as_dicts(), output_path=file_path, overwrite_ok=overwrite
+    #     )

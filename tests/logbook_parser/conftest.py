@@ -1,7 +1,7 @@
 """conftest.py file for logbook_parser"""
 import logging
-from pathlib import Path
 from importlib import resources
+from pathlib import Path
 
 import pytest
 

@@ -6,11 +6,12 @@ from logbook_parser.apa_2023_02.models.raw import (
     Trip,
     Year,
 )
-from logbook_parser.apa_2023_02.models.raw_flat import RawFlightRow
+from logbook_parser.apa_2023_02.models.raw_flat import FlatLogbook, RawFlightRow
 
 
-def flatten_logbook(logbook: Logbook) -> list[RawFlightRow]:
-    rows = []
+def flatten_logbook(logbook: Logbook) -> FlatLogbook:
+    flat_logbook = FlatLogbook(metadata=logbook.metadata, rows=[])
+
     prev_row_index = 0
     for year in logbook.years:
         flat = flatten_year(
@@ -19,8 +20,8 @@ def flatten_logbook(logbook: Logbook) -> list[RawFlightRow]:
             aa_number=logbook.aa_number,
         )
         prev_row_index = flat[-1].row_idx
-        rows.extend(flat)
-    return rows
+        flat_logbook.rows.extend(flat)
+    return flat_logbook
 
 
 def flatten_year(
@@ -142,6 +143,6 @@ def make_row(
         overnight_duration=flight.overnight_duration,
         delay_code=flight.delay_code,
         fuel_performance=flight.fuel_performance,
-        row_uuid="",
+        uuid=flight.generate_uuid(),
     )
     return flight_row

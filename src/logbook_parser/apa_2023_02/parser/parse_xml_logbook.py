@@ -1,10 +1,10 @@
+import hashlib
 import logging
 import xml.etree.ElementTree as ET
 from pathlib import Path
-import hashlib
 
 from logbook_parser.apa_2023_02.models import raw
-from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata, HashedFile
+from logbook_parser.apa_2023_02.models.metadata import HashedFile, ParsedMetadata
 from logbook_parser.snippets.hash.file_hash import make_hashed_file
 
 logger = logging.getLogger(__name__)

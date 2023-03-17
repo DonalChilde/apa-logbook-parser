@@ -1,13 +1,15 @@
+from datetime import date, datetime, timedelta
 from operator import attrgetter
+from pathlib import Path
 from typing import Iterable
-from pydantic import BaseModel as PydanticBaseModel
 from zoneinfo import ZoneInfo
 
-from datetime import date, datetime, timedelta
+from pydantic import BaseModel as PydanticBaseModel
 
 from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
+from logbook_parser.apa_2023_02.models.pydantic_json_mixin import PydanticJsonMixin
 from logbook_parser.snippets.datetime.factored_duration import FactoredDuration
-
+from logbook_parser.snippets.file.json_mixin import JsonMixin
 
 # def serialize_timedelta(td: timedelta) -> str:
 #     factored = FactoredDuration.from_timedelta(td)
@@ -77,6 +79,7 @@ class Flight(BaseModel):
     arrival_performance: timedelta
     position: str
     delay_code: str
+    uuid: str = ""
 
 
 class DutyPeriod(BaseModel):
@@ -108,7 +111,7 @@ class Year(BaseModel):
     months: dict[int, Month]
 
 
-class Logbook(BaseModel):
+class Logbook(BaseModel, JsonMixin):
     metadata: ParsedMetadata | None
     aa_number: str
     years: dict[int, Year]
