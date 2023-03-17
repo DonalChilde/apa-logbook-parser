@@ -1,7 +1,11 @@
 """Data model that most directly represents the available raw data from an xml file."""
-from uuid import UUID
+from uuid import uuid5
+
 from pydantic import BaseModel
+
 from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
+from logbook_parser.project_uuid import PROJECT_UUID
+from logbook_parser.snippets.file.json_mixin import JsonMixin
 
 
 class Flight(BaseModel):
@@ -25,6 +29,10 @@ class Flight(BaseModel):
     arrival_performance: str
     position: str
     delay_code: str
+
+    def generate_uuid(self) -> str:
+        uuid = uuid5(PROJECT_UUID, repr(self))
+        return str(uuid)
 
 
 class DutyPeriod(BaseModel):
@@ -59,7 +67,7 @@ class Year(BaseModel):
     months: list[Month]
 
 
-class Logbook(BaseModel):
+class Logbook(BaseModel, JsonMixin):
     metadata: ParsedMetadata | None
     aa_number: str
     sum_of_actual_block: str

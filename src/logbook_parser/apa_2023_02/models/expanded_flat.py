@@ -1,7 +1,11 @@
+from pathlib import Path
 from typing import Iterator
+
 from pydantic import BaseModel
 
 from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
+from logbook_parser.snippets.file.dicts_to_csv import DictToCsvMixin
+from logbook_parser.snippets.file.json_mixin import JsonMixin
 
 
 class ExpandedFlightRow(BaseModel):
@@ -36,17 +40,22 @@ class ExpandedFlightRow(BaseModel):
     arrival_performance: str
     position: str
     delay_code: str
-    row_uuid: str
+    uuid: str
     metadata: str = ""
 
 
-class ExpandedFlatLogbook(BaseModel):
+class ExpandedFlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
     metadata: ParsedMetadata | None
     rows: list[ExpandedFlightRow]
 
-    def as_dicts(self) -> Iterator[dict]:
+    def as_dicts(self, *args, **kwargs) -> Iterator[dict]:
         for idx, row in enumerate(self.rows):
             if idx == 0:
                 if self.metadata is not None:
                     row.metadata = self.metadata.json()
             yield row.dict()
+
+    # def as_csv(self, file_path: Path, overwrite: bool):
+    #     dicts_to_csv(
+    #         dicts=self.as_dicts(), file_path==file_path, overwrite_ok=overwrite
+    #     )

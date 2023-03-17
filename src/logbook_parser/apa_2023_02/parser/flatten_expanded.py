@@ -59,7 +59,7 @@ def make_row(
         arrival_performance=serialize_timedelta(flight.arrival_performance),
         position=flight.position,
         delay_code=flight.delay_code,
-        row_uuid="",
+        uuid=flight.uuid,
         metadata="",
     )
     return row

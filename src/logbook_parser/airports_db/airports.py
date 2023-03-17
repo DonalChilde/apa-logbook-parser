@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List
-from logbook_parser.airports_db.airport import Airport
+
 import airportsdata
+
+from logbook_parser.airports_db.airport import Airport
 
 airports = airportsdata.load("IATA")  # key is IATA code
 

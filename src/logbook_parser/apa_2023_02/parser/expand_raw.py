@@ -1,14 +1,15 @@
-from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
-from datetime import time as dt_time
-from zoneinfo import ZoneInfo
 import time
+from dataclasses import dataclass
+from datetime import date, datetime
+from datetime import time as dt_time
+from datetime import timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from logbook_parser.airports_db.airports import from_iata
 from logbook_parser.apa_2023_02.models import expanded, raw
 from logbook_parser.snippets.datetime.parse_duration_regex import (
-    pattern_HHHMM,
     parse_duration,
+    pattern_HHHMM,
 )
 
 DURATION_PATTERN = pattern_HHHMM(hm_sep=".")
@@ -101,6 +102,7 @@ def expand_flight(raw_flight: raw.Flight) -> expanded.Flight:
         arrival_performance=parse_performance(raw_flight.arrival_performance),
         position=raw_flight.position,
         delay_code=raw_flight.delay_code,
+        uuid=raw_flight.generate_uuid(),
     )
     result.arrival_time = parse_arrival_time(
         expanded_flight=result, raw_flight=raw_flight

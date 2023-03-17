@@ -6,8 +6,8 @@ from logbook_parser.apa_2023_02.parser.parse_xml_logbook import (
     parse_logbook_xml_tree,
     read_logbook_xml_file,
 )
-from logbook_parser.snippets.click.task_complete import task_complete
 from logbook_parser.snippets.click.check_file_output_path import check_file_output_path
+from logbook_parser.snippets.click.task_complete import task_complete
 
 
 @click.command()
