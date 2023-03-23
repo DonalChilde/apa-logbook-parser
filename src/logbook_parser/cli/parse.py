@@ -2,25 +2,29 @@ from pathlib import Path
 
 import click
 
+from logbook_parser.apa_2023_02.models import expanded, raw
+from logbook_parser.apa_2023_02.parser.expand_raw import expand_raw_logbook
+from logbook_parser.apa_2023_02.parser.flatten_expanded import LogbookFlattener
+from logbook_parser.apa_2023_02.parser.flatten_raw import flatten_logbook
 from logbook_parser.apa_2023_02.parser.parse_xml_logbook import (
     parse_logbook_xml_tree,
     read_logbook_xml_file,
 )
-from logbook_parser.snippets.click.check_file_output_path import check_file_output_path
 from logbook_parser.snippets.click.task_complete import task_complete
+from logbook_parser.snippets.xml.format_xml_file import format_xml_file
 
 
 @click.command()
 @click.argument("file_in", type=click.Path(exists=True, dir_okay=False, path_type=Path))
 @click.argument("path_out", type=click.Path(file_okay=False, path_type=Path))
-@click.option(
-    "--default_filename",
-    "-d",
-    is_flag=True,
-    default=True,
-    show_default=True,
-    help="Use the default file name for the output file.",
-)
+# @click.option(
+#     "--default_filename",
+#     "-d",
+#     is_flag=True,
+#     default=True,
+#     show_default=True,
+#     help="Use the default file name for the output file.",
+# )
 @click.option(
     "--overwrite",
     "-o",
@@ -35,19 +39,63 @@ def parse(
     file_in: Path,
     path_out: Path,
     overwrite: bool,
-    default_filename: bool,
+    # default_filename: bool,
 ):
     """"""
 
     element_tree = read_logbook_xml_file(file_in)
     raw_logbook = parse_logbook_xml_tree(element_tree=element_tree)
-    if default_filename:
-        file_name = "fix_this_filename.json"
-        output_path = path_out / file_name
-    else:
-        output_path = path_out
-    check_file_output_path(output_path=output_path, overwrite=overwrite)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(raw_logbook.json(indent=2))
-    click.echo(f"Parsed file written to {output_path}")
+    formatted_source_path = path_out / raw_logbook.default_file_name()
+    formatted_source_path = formatted_source_path.with_suffix(".xml")
+    write_formatted_xml_source(
+        source_file=file_in, output_file=formatted_source_path, overwrite=overwrite
+    )
+    write_raw_logbook(raw_logbook, path_out, overwrite)
+    write_flat_raw_logbook(raw_logbook, path_out, overwrite)
+    expanded_logbook = expand_raw_logbook(raw_logbook)
+    write_expanded_logbook(expanded_logbook, path_out, overwrite)
+    write_flat_expanded_logbook(expanded_logbook, path_out, overwrite)
+
     task_complete(ctx=ctx)
+
+
+def write_formatted_xml_source(source_file: Path, output_file: Path, overwrite: bool):
+    format_xml_file(
+        input_path=source_file, output_path=output_file, overwrite=overwrite
+    )
+    click.echo(f"Formatted source .xml written to {output_file}")
+
+
+def write_raw_logbook(logbook: raw.Logbook, path_out: Path, overwrite: bool):
+    file_path = path_out / logbook.default_file_name()
+    logbook.to_json(file_path=file_path, overwrite=overwrite)
+    click.echo(f"Raw logbook .json written to {file_path}")
+
+
+def write_flat_raw_logbook(logbook: raw.Logbook, path_out: Path, overwrite: bool):
+    flat_raw = flatten_logbook(logbook)
+    file_path = path_out / flat_raw.default_file_name()
+    flat_raw.to_json(file_path=file_path, overwrite=overwrite)
+    click.echo(f"Flattened Raw logbook .json written to {file_path}")
+    csv_file_path = file_path.with_suffix(".csv")
+    flat_raw.to_csv(file_path=csv_file_path, overwrite=overwrite)
+    click.echo(f"Flattened Raw logbook .csv written to {csv_file_path}")
+
+
+def write_expanded_logbook(logbook: expanded.Logbook, path_out: Path, overwrite: bool):
+    file_path = path_out / logbook.default_file_name()
+    logbook.to_json(file_path=file_path, overwrite=overwrite)
+    click.echo(f"Expanded logbook .json written to {file_path}")
+
+
+def write_flat_expanded_logbook(
+    logbook: expanded.Logbook, path_out: Path, overwrite: bool
+):
+    flattener = LogbookFlattener()
+    flat_expanded = flattener.flatten_logbook(logbook)
+    file_path = path_out / flat_expanded.default_file_name()
+    flat_expanded.to_json(file_path=file_path, overwrite=overwrite)
+    click.echo(f"Flattened Expanded logbook .json written to {file_path}")
+    csv_file_path = file_path.with_suffix(".csv")
+    flat_expanded.to_csv(file_path=csv_file_path, overwrite=overwrite)
+    click.echo(f"Flattened Expanded logbook .csv written to {csv_file_path}")

@@ -109,7 +109,7 @@ testing = [
 
 
 [project.scripts]
-aa-logbook-parser = "logbook_parser.logbook_parser.cli.main:main"
+aa-logbook-parser = "logbook_parser.cli.main:main"
 
 [tool.isort]
 profile = "black"
