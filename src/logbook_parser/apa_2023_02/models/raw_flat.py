@@ -1,3 +1,5 @@
+from datetime import datetime
+from operator import attrgetter
 from pathlib import Path
 from typing import Iterator
 from uuid import UUID
@@ -49,13 +51,19 @@ class FlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
     rows: list[RawFlightRow]
 
     def as_dicts(self, *args, **kwargs) -> Iterator[dict]:
+        self.rows.sort(key=attrgetter("row_idx"))
         for idx, row in enumerate(self.rows):
             if idx == 0:
                 if self.metadata is not None:
                     row.metadata = self.metadata.json()
             yield row.dict()
 
-    # def as_csv(self, file_path: Path, overwrite: bool):
-    #     dicts_to_csv(
-    #         dicts=self.as_dicts(), output_path=file_path, overwrite_ok=overwrite
-    #     )
+    def default_file_name(self) -> str:
+        sorted_rows = sorted(self.rows, key=attrgetter("departure_local"))
+        start_date = (
+            datetime.fromisoformat(sorted_rows[0].departure_local).date().isoformat()
+        )
+        end_date = (
+            datetime.fromisoformat(sorted_rows[-1].departure_local).date().isoformat()
+        )
+        return f"{start_date}L-{end_date}L-flattened-raw-logbook.json"

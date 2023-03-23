@@ -1,4 +1,6 @@
 """Data model that most directly represents the available raw data from an xml file."""
+from datetime import datetime
+from typing import Iterable
 from uuid import uuid5
 
 from pydantic import BaseModel
@@ -76,4 +78,23 @@ class Logbook(BaseModel, JsonMixin):
     years: list[Year]
 
     def default_file_name(self) -> str:
-        return "logbook"
+        first_departure = (
+            self.years[0].months[0].trips[0].duty_periods[0].flights[0].departure_local
+        )
+        last_departure = (
+            self.years[-1]
+            .months[-1]
+            .trips[-1]
+            .duty_periods[-1]
+            .flights[-1]
+            .departure_local
+        )
+        start_date = datetime.fromisoformat(first_departure).date().isoformat()
+        end_date = datetime.fromisoformat(last_departure).date().isoformat()
+        return f"{start_date}L-{end_date}L-raw-logbook.json"
+
+    def trips(self) -> Iterable[Trip]:
+        for year in self.years:
+            for month in year.months:
+                for trip in month.trips:
+                    yield trip

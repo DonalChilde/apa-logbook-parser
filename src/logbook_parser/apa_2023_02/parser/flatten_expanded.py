@@ -71,7 +71,7 @@ class LogbookFlattener:
 
     def flatten_logbook(self, expanded_log: expanded.Logbook) -> ExpandedFlatLogbook:
         flat_log = ExpandedFlatLogbook(metadata=expanded_log.metadata, rows=[])
-        trips = sorted(expanded_log.trips(), key=methodcaller("first_start"))
+        trips = sorted(expanded_log.trips(), key=methodcaller("first_departure"))
         for trip in trips:
             flat_log.rows.extend(
                 self.flatten_trip(aa_number=expanded_log.aa_number, trip=trip)

@@ -15,7 +15,9 @@ def test_parse_xml_with_metadata(report_data_ctx, test_app_data_dir: Path):
     with report_data_ctx as file_path:
         raw_logbook = parser.parse_logbook(file_path=file_path)
         assert raw_logbook.aa_number == "420357"
-        output_file = test_app_data_dir / "parse_logbook_xml" / "raw_logbook.json"
+        output_file = (
+            test_app_data_dir / "parse_logbook_xml" / raw_logbook.default_file_name()
+        )
         raw_logbook.to_json(output_file, overwrite=True)
         assert output_file.is_file()
 
