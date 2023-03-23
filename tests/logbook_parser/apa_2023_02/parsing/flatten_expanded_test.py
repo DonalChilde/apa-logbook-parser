@@ -11,11 +11,12 @@ def test_flatten_expanded(report_data_ctx, test_app_data_dir: Path):
         data = parser.parse_logbook(file_path=file_path)
         expanded_logbook = expand_raw_logbook(raw_log=data)
         assert data.aa_number == "420357"
-        output_file = (
-            test_app_data_dir / "flatten_expanded" / "flat_expanded_logbook.json"
-        )
+
         flattener = LogbookFlattener()
         flattened_log = flattener.flatten_logbook(expanded_logbook)
+        output_file = (
+            test_app_data_dir / "flatten_expanded" / flattened_log.default_file_name()
+        )
         flattened_log.to_json(output_file, overwrite=True)
         # Load logbook
         loaded_logbook = ExpandedFlatLogbook.parse_file(output_file)

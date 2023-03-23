@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Callable, Iterable, Literal, Tuple
 from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -94,11 +94,31 @@ class Trip(BaseModel):
     bid_equipment: str
     duty_periods: list[DutyPeriod]
 
-    def first_start(self) -> datetime:
-        flights: list[Flight] = sorted(
-            self.duty_periods[0].flights, key=attrgetter("departure_time.utc_date")
-        )
-        return flights[0].departure_time.utc_date
+    def first_departure(self, tz_spec: Literal["utc", "local"] = "utc") -> datetime:
+        if tz_spec == "utc":
+            return self.duty_periods[0].flights[0].departure_time.utc_date
+        return self.duty_periods[0].flights[0].departure_time.local()
+
+    def last_departure(self, tz_spec: Literal["utc", "local"] = "utc") -> datetime:
+        if tz_spec == "utc":
+            return self.duty_periods[-1].flights[-1].departure_time.utc_date
+        return self.duty_periods[-1].flights[-1].departure_time.local()
+
+    def flights(self) -> Iterable[Flight]:
+        for dutyperiod in self.duty_periods:
+            for flight in dutyperiod.flights:
+                yield flight
+
+    def flights_sorted(
+        self, getter: Callable[[Flight], Any] = attrgetter("departure_time.utc_date")
+    ) -> Iterable[Flight]:
+        sort_keys: list[Tuple[int, int, Any]] = []
+        for idx_dp, dutyperiod in enumerate(self.duty_periods):
+            for idx_flt, flight in enumerate(dutyperiod.flights):
+                sort_keys.append((idx_dp, idx_flt, getter(flight)))
+        sort_keys.sort(key=itemgetter(2))
+        for sort_key in sort_keys:
+            yield self.duty_periods[sort_key[0]].flights[sort_key[1]]
 
 
 class Month(BaseModel):
@@ -121,3 +141,27 @@ class Logbook(BaseModel, JsonMixin):
             for month in year.months.values():
                 for trip in month.trips:
                     yield trip
+
+    def default_file_name(self) -> str:
+        start_date: str | None = None
+        end_date: str | None = None
+        trip: Trip | None = None
+        for idx, trip in enumerate(self.sorted_trips()):
+            if idx == 0:
+                start_date = trip.first_departure().date().isoformat()
+        if trip is not None:
+            end_date = trip.last_departure().date().isoformat()
+        return f"{start_date}Z-{end_date}Z-expanded-logbook.json"
+
+    def sorted_trips(self) -> Iterable[Trip]:
+        """Trips sorted based on first departure time"""
+        sort_keys: list[Tuple[int, int, int, Any]] = []
+        for key_year, year in self.years.items():
+            for key_month, month in year.months.items():
+                for idx_trip, trip in enumerate(month.trips):
+                    sort_keys.append(
+                        (key_year, key_month, idx_trip, trip.first_departure())
+                    )
+        sort_keys.sort(key=itemgetter(3))
+        for sort_key in sort_keys:
+            yield self.years[sort_key[0]].months[sort_key[1]].trips[sort_key[2]]

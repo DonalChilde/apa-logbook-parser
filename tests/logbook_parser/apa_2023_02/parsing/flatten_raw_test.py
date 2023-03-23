@@ -13,7 +13,9 @@ def test_flatten_logbook(report_data_ctx, test_app_data_dir: Path):
         flat_raw_logbook = flatten_logbook(raw_logbook)
         assert raw_logbook.aa_number == "420357"
         output_file = (
-            test_app_data_dir / "flatten_raw_logbook" / "flat_raw_logbook.json"
+            test_app_data_dir
+            / "flatten_raw_logbook"
+            / flat_raw_logbook.default_file_name()
         )
         flat_raw_logbook.to_json(output_file, overwrite=True)
 

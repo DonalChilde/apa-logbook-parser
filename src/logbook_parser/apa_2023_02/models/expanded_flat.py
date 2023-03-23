@@ -1,4 +1,5 @@
-from pathlib import Path
+from datetime import datetime
+from operator import attrgetter
 from typing import Iterator
 
 from pydantic import BaseModel
@@ -55,7 +56,12 @@ class ExpandedFlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
                     row.metadata = self.metadata.json()
             yield row.dict()
 
-    # def as_csv(self, file_path: Path, overwrite: bool):
-    #     dicts_to_csv(
-    #         dicts=self.as_dicts(), file_path==file_path, overwrite_ok=overwrite
-    #     )
+    def default_file_name(self) -> str:
+        sorted_rows = sorted(self.rows, key=attrgetter("departure_utc"))
+        start_date = (
+            datetime.fromisoformat(sorted_rows[0].departure_utc).date().isoformat()
+        )
+        end_date = (
+            datetime.fromisoformat(sorted_rows[-1].departure_utc).date().isoformat()
+        )
+        return f"{start_date}Z-{end_date}Z-flattened-expanded-logbook.json"
