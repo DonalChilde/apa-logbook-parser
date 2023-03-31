@@ -1,6 +1,6 @@
 from datetime import datetime
 from operator import attrgetter
-from typing import Iterator
+from typing import Any, Callable, Iterable, Iterator
 
 from pydantic import BaseModel
 
@@ -44,6 +44,11 @@ class ExpandedFlightRow(BaseModel):
     uuid: str
     metadata: str = ""
 
+    def is_deadhead(self) -> bool:
+        if self.position == "DH":
+            return True
+        return False
+
 
 class ExpandedFlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
     metadata: ParsedMetadata | None
@@ -57,11 +62,49 @@ class ExpandedFlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
             yield row.dict()
 
     def default_file_name(self) -> str:
-        sorted_rows = sorted(self.rows, key=attrgetter("departure_utc"))
-        start_date = (
-            datetime.fromisoformat(sorted_rows[0].departure_utc).date().isoformat()
-        )
-        end_date = (
-            datetime.fromisoformat(sorted_rows[-1].departure_utc).date().isoformat()
-        )
+        start_date = end_date = ""
+        row = None
+        for idx, row in enumerate(self.sorted()):
+            if idx == 1:
+                start_date = (
+                    datetime.fromisoformat(row.departure_utc).date().isoformat()
+                )
+        if row is not None:
+            end_date = datetime.fromisoformat(row.departure_utc).date().isoformat()
         return f"{start_date}Z-{end_date}Z-flattened-expanded-logbook.json"
+
+    def sorted(
+        self, getter: Callable[[ExpandedFlightRow], Any] = attrgetter("departure_utc")
+    ) -> Iterable[ExpandedFlightRow]:
+        sorted_rows = sorted(self.rows, key=getter)
+        for row in sorted_rows:
+            yield row
+
+    def __str__(self) -> str:
+        return self.stats()
+
+    def stats(self, location: str = "Undefined") -> str:
+        source = ""
+        first = last = ""
+        deadheads = 0
+        row = None
+        for idx, row in enumerate(self.sorted(), start=1):
+            if idx == 1:
+                first = row.departure_utc
+            if row.is_deadhead():
+                deadheads += 1
+        if row is not None:
+            last = row.departure_utc
+        if self.metadata is not None:
+            source = str(self.metadata.original_source.file_path)
+        msg = (
+            f"Flattened Expanded APA Logbook\n"
+            f"\tLocation: {location}\n"
+            f"\tParsed from: {source}\n"
+            f"\tAA Number: {self.rows[0].aa_number}\n"
+            f"\tFirst Departure: {first}Z\n"
+            f"\tLast Departure: {last}Z\n"
+            f"\tFlights: {len(self.rows)}\n"
+            f"\tDeadheads: {deadheads}\n"
+        )
+        return msg
