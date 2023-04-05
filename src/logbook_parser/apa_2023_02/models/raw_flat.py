@@ -1,7 +1,7 @@
 from datetime import datetime
 from operator import attrgetter
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Tuple
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -42,8 +42,10 @@ class RawFlightRow(BaseModel):
     uuid: str
     metadata: str = ""
 
-    def get_uuid(self) -> UUID:
-        raise NotImplementedError
+    def is_deadhead(self) -> bool:
+        if self.position == "DH":
+            return True
+        return False
 
 
 class FlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
@@ -58,12 +60,38 @@ class FlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
                     row.metadata = self.metadata.json()
             yield row.dict()
 
+    def __str__(self) -> str:
+        return self.stats()
+
+    def stats(self, location: str = "Undefined") -> str:
+        source = ""
+        first, last = self.first_and_last_departure()
+        deadheads = 0
+        for flight in self.rows:
+            if flight.is_deadhead():
+                deadheads += 1
+        if self.metadata is not None:
+            source = str(self.metadata.original_source.file_path)
+        msg = (
+            f"Flattened Raw APA Logbook\n"
+            f"\tLocation: {location}\n"
+            f"\tParsed from: {source}\n"
+            f"\tAA Number: {self.rows[0].aa_number}\n"
+            f"\tFirst Departure: {first.isoformat()}L\n"
+            f"\tLast Departure: {last.isoformat()}L\n"
+            f"\tFlights: {len(self.rows)}\n"
+            f"\tDeadheads: {deadheads}\n"
+        )
+        return msg
+
     def default_file_name(self) -> str:
-        sorted_rows = sorted(self.rows, key=attrgetter("departure_local"))
-        start_date = (
-            datetime.fromisoformat(sorted_rows[0].departure_local).date().isoformat()
-        )
-        end_date = (
-            datetime.fromisoformat(sorted_rows[-1].departure_local).date().isoformat()
-        )
+        first, last = self.first_and_last_departure()
+        start_date = first.date().isoformat()
+        end_date = last.date().isoformat()
         return f"{start_date}L-{end_date}L-flattened-raw-logbook.json"
+
+    def first_and_last_departure(self) -> Tuple[datetime, datetime]:
+        sorted_rows = sorted(self.rows, key=attrgetter("departure_local"))
+        first_departure = datetime.fromisoformat(sorted_rows[0].departure_local)
+        last_departure = datetime.fromisoformat(sorted_rows[-1].departure_local)
+        return (first_departure, last_departure)

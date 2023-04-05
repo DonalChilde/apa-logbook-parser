@@ -6,10 +6,8 @@ from logbook_parser.apa_2023_02.parser.flatten_raw import flatten_logbook
 
 
 def test_flatten_logbook(report_data_ctx, test_app_data_dir: Path):
-    with report_data_ctx as filepath:
-        element_tree = parser.read_logbook_xml_file(file_path=filepath)
-        # ctx = ParseContext(source=str(filepath), extra={})
-        raw_logbook = parser.parse_logbook_xml_tree(element_tree=element_tree)
+    with report_data_ctx as file_path:
+        raw_logbook = parser.parse_logbook(file_path=file_path)
         flat_raw_logbook = flatten_logbook(raw_logbook)
         assert raw_logbook.aa_number == "420357"
         output_file = (
@@ -27,15 +25,21 @@ def test_flatten_logbook(report_data_ctx, test_app_data_dir: Path):
 
 
 def test_csv_out(report_data_ctx, test_app_data_dir: Path):
-    with report_data_ctx as filepath:
-        element_tree = parser.read_logbook_xml_file(file_path=filepath)
-        # ctx = ParseContext(source=str(filepath), extra={})
-        logbook = parser.parse_logbook_xml_tree(element_tree=element_tree)
-        flat_raw_logbook = flatten_logbook(logbook)
-
-        # pp.pprint(asdict(data))
-        assert logbook.aa_number == "420357"
+    with report_data_ctx as file_path:
+        raw_logbook = parser.parse_logbook(file_path=file_path)
+        flat_raw_logbook = flatten_logbook(raw_logbook)
+        assert raw_logbook.aa_number == "420357"
         output_file = test_app_data_dir / "flatten_raw_logbook" / "logbook.csv"
         output_file.parent.mkdir(parents=True, exist_ok=True)
         flat_raw_logbook.to_csv(file_path=output_file, overwrite=True)
         assert output_file.is_file()
+
+
+def test_to_str(report_data_ctx, test_app_data_dir: Path):
+    with report_data_ctx as file_path:
+        raw_logbook = parser.parse_logbook(file_path=file_path)
+        assert raw_logbook.aa_number == "420357"
+        flat_raw_logbook = flatten_logbook(raw_logbook)
+        assert "AA Number: 420357" in str(flat_raw_logbook)
+        # print(flat_raw_logbook)
+        # assert False

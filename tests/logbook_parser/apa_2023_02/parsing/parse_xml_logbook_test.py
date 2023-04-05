@@ -11,7 +11,7 @@ def test_parse_xml(report_data_ctx):
         assert raw_logbook.aa_number == "420357"
 
 
-def test_parse_xml_with_metadata(report_data_ctx, test_app_data_dir: Path):
+def test_parse_xml_to_json(report_data_ctx, test_app_data_dir: Path):
     with report_data_ctx as file_path:
         raw_logbook = parser.parse_logbook(file_path=file_path)
         assert raw_logbook.aa_number == "420357"
@@ -26,3 +26,12 @@ def test_parse_xml_with_metadata(report_data_ctx, test_app_data_dir: Path):
         loaded_output_path = loaded_output_path.with_name("logbook_reloaded.json")
         loaded_logbook.to_json(loaded_output_path, overwrite=True)
         assert raw_logbook == loaded_logbook
+
+
+def test_parse_xml_to_string(report_data_ctx, test_app_data_dir: Path):
+    with report_data_ctx as file_path:
+        raw_logbook = parser.parse_logbook(file_path=file_path)
+        assert raw_logbook.aa_number == "420357"
+        assert "AA Number: 420357" in str(raw_logbook)
+        # print(raw_logbook)
+        # assert False
