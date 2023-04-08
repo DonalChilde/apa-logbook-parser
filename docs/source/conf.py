@@ -20,12 +20,11 @@ import logbook_parser  # pylint: disable=wrong-import-position
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 distro = distribution("logbook_parser")
-print(distro)
-project = distro.metadata["Name"]
+project = f'{distro.metadata["Name"]}'
 project_copyright = f"2022, {distro.metadata['Author']}"
-author = distro.metadata["Author"]
+author = f"{distro.metadata['Author']}"
 # The full version, including alpha/beta/rc tags.
-release = distro.metadata["Version"]
+release = f'{distro.metadata["Version"]}'
 # The short X.Y.Z version.
 version = release
 
