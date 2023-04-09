@@ -127,7 +127,7 @@ class Logbook(BaseModel, JsonMixin):
     def default_file_name(self) -> str:
         start_date = self.first_departure_date().date().isoformat()
         end_date = self.last_departure_date().date().isoformat()
-        return f"{start_date}L-{end_date}L-raw-logbook.json"
+        return f"{self.aa_number}-{start_date}L-{end_date}L-raw-logbook.json"
 
     def first_departure_date(self) -> datetime:
         first_departure = (
