@@ -1,12 +1,12 @@
 from datetime import timedelta
 from operator import methodcaller
 
-from logbook_parser.apa_2023_02.models import expanded
-from logbook_parser.apa_2023_02.models.expanded_flat import (
+from apa_logbook_parser.apa_2023_02.models import expanded
+from apa_logbook_parser.apa_2023_02.models.expanded_flat import (
     ExpandedFlatLogbook,
     ExpandedFlightRow,
 )
-from logbook_parser.snippets.datetime.factored_duration import FactoredDuration
+from apa_logbook_parser.snippets.datetime.factored_duration import FactoredDuration
 
 
 def serialize_timedelta(td: timedelta) -> str:

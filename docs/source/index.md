@@ -1,4 +1,4 @@
-# Welcome to AA PBS Exporter's documentation
+# Welcome to APA Logbook Parser's documentation
 
 ```{toctree}
 ---
@@ -7,7 +7,7 @@ maxdepth: 1
 ---
 
 Usage <usage>
-CLI reference <aa_pbs_exporter_cli>
+CLI reference <apa_logbook_parser_cli>
 API Reference <api-reference/modules.rst>
 Changelog <changelog>
 License <license>

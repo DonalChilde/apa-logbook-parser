@@ -4,9 +4,9 @@ from time import perf_counter_ns
 
 import click
 
-from logbook_parser.cli.parse import parse
+from apa_logbook_parser.cli.parse import parse
 
-PROJECT_SLUG = "unique_name_for_project"
+PROJECT_SLUG = "pfmsoft_apa_logbook_parser"
 APP_DIR = click.get_app_dir(PROJECT_SLUG)
 LOG_DIR = Path(APP_DIR).expanduser() / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)

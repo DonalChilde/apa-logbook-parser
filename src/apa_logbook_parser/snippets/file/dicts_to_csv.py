@@ -13,7 +13,7 @@ import csv
 from pathlib import Path
 from typing import Dict, Iterable, Iterator
 
-from logbook_parser.snippets.file.validate_file_out import validate_file_out
+from apa_logbook_parser.snippets.file.validate_file_out import validate_file_out
 
 
 def dicts_to_csv(

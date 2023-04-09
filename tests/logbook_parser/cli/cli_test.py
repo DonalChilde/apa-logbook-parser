@@ -1,6 +1,6 @@
 from pathlib import Path
 from click.testing import CliRunner
-from logbook_parser.cli.main import main
+from apa_logbook_parser.cli.main import main
 
 
 def test_parse_cli(report_data_ctx, test_app_data_dir: Path):

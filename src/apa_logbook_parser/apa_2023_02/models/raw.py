@@ -6,9 +6,9 @@ from uuid import uuid5
 
 from pydantic import BaseModel
 
-from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
-from logbook_parser.project_uuid import PROJECT_UUID
-from logbook_parser.snippets.file.json_mixin import JsonMixin
+from apa_logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
+from apa_logbook_parser.project_uuid import PROJECT_UUID
+from apa_logbook_parser.snippets.file.json_mixin import JsonMixin
 
 
 class Flight(BaseModel):

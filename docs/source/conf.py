@@ -15,11 +15,11 @@ import sys
 from importlib.metadata import distribution
 
 sys.path.insert(0, os.path.abspath("../../src"))
-import logbook_parser  # pylint: disable=wrong-import-position
+import apa_logbook_parser  # pylint: disable=wrong-import-position
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-distro = distribution("logbook_parser")
+distro = distribution("apa_logbook_parser")
 project = f'{distro.metadata["Name"]}'
 project_copyright = f"2022, {distro.metadata['Author']}"
 author = f"{distro.metadata['Author']}"
@@ -70,3 +70,4 @@ pygments_style = "sphinx"
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+# print("Variables:\n", locals())

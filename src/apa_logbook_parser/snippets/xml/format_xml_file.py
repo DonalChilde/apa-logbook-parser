@@ -11,8 +11,8 @@
 from pathlib import Path
 from xml.dom.minidom import parse
 
-from logbook_parser.snippets.file.remove_blank_lines import remove_blank_lines
-from logbook_parser.snippets.file.validate_file_out import validate_file_out
+from apa_logbook_parser.snippets.file.remove_blank_lines import remove_blank_lines
+from apa_logbook_parser.snippets.file.validate_file_out import validate_file_out
 
 
 def format_xml_file(
