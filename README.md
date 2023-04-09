@@ -1,4 +1,4 @@
-# logbook-parser
+# APA Logbook Parser
 
 <!-- badges-begin -->
 [![PyPI](https://img.shields.io/pypi/v/logbook-parser.svg)][pypi status]
@@ -6,15 +6,15 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/logbook-parser)][pypi status]
 [![License](https://img.shields.io/pypi/l/logbook-parser)][license]
 
-[![Read the documentation at https://logbook-parser.readthedocs.io/](https://img.shields.io/readthedocs/logbook-parser/latest.svg?label=Read%20the%20Docs)][read the docs]
+[![Read the documentation at https://apa-logbook-parser.readthedocs.io/](https://img.shields.io/readthedocs/apa-logbook-parser/latest.svg?label=Read%20the%20Docs)][read the docs]
 [![Tests](https://github.com/DonalChilde/logbook-parser/workflows/Tests/badge.svg)][tests]
 [![Codecov](https://codecov.io/gh/DonalChilde/logbook-parser/branch/main/graph/badge.svg)][codecov]
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]
 
-[pypi status]: https://pypi.org/project/logbook-parser/
-[read the docs]: https://logbook-parser.readthedocs.io/
+[pypi status]: https://pypi.org/project/apa-logbook-parser/
+[read the docs]: https://apa-logbook-parser.readthedocs.io/
 [tests]: https://github.com/DonalChilde/logbook-parser/actions?workflow=Tests
 [codecov]: https://app.codecov.io/gh/DonalChilde/logbook-parser
 [pre-commit]: https://github.com/pre-commit/pre-commit
@@ -32,10 +32,10 @@
 
 ## Quickstart
 
-You can install _logbook-parser_ via [pip] from [PyPI]:
+You can install _apa-logbook-parser_ via [pip] from [PyPI]:
 
 ```console
-pip install logbook-parser
+pip install apa-logbook-parser
 ```
 
 ## Usage
@@ -50,7 +50,7 @@ To learn more, see the [Contributor Guide].
 ## License
 
 Distributed under the terms of the [MIT license][license],
-_logbook-parser_ is free and open source software.
+_apa-logbook-parser_ is free and open source software.
 
 ## Issues
 
