@@ -1,4 +1,4 @@
-from logbook_parser.apa_2023_02.models.raw import (
+from apa_logbook_parser.apa_2023_02.models.raw import (
     DutyPeriod,
     Flight,
     Logbook,
@@ -6,7 +6,7 @@ from logbook_parser.apa_2023_02.models.raw import (
     Trip,
     Year,
 )
-from logbook_parser.apa_2023_02.models.raw_flat import FlatLogbook, RawFlightRow
+from apa_logbook_parser.apa_2023_02.models.raw_flat import FlatLogbook, RawFlightRow
 
 
 def flatten_logbook(logbook: Logbook) -> FlatLogbook:

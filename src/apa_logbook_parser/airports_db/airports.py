@@ -4,7 +4,7 @@ from typing import Dict, List
 
 import airportsdata
 
-from logbook_parser.airports_db.airport import Airport
+from apa_logbook_parser.airports_db.airport import Airport
 
 airports = airportsdata.load("IATA")  # key is IATA code
 

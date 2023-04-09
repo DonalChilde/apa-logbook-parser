@@ -2,17 +2,13 @@ from pathlib import Path
 
 import click
 
-from logbook_parser.apa_2023_02.models import expanded, raw
-from logbook_parser.apa_2023_02.parser.expand_raw import expand_raw_logbook
-from logbook_parser.apa_2023_02.parser.flatten_expanded import LogbookFlattener
-from logbook_parser.apa_2023_02.parser.flatten_raw import flatten_logbook
-from logbook_parser.apa_2023_02.parser.parse_xml_logbook import (
-    parse_logbook,
-    parse_logbook_xml_tree,
-    read_logbook_xml_file,
-)
-from logbook_parser.snippets.click.task_complete import task_complete
-from logbook_parser.snippets.xml.format_xml_file import format_xml_file
+from apa_logbook_parser.apa_2023_02.models import expanded, raw
+from apa_logbook_parser.apa_2023_02.parser.expand_raw import expand_raw_logbook
+from apa_logbook_parser.apa_2023_02.parser.flatten_expanded import LogbookFlattener
+from apa_logbook_parser.apa_2023_02.parser.flatten_raw import flatten_logbook
+from apa_logbook_parser.apa_2023_02.parser.parse_xml_logbook import parse_logbook
+from apa_logbook_parser.snippets.click.task_complete import task_complete
+from apa_logbook_parser.snippets.xml.format_xml_file import format_xml_file
 
 
 @click.command()

@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from logbook_parser.apa_2023_02.models.raw_flat import FlatLogbook
-from logbook_parser.apa_2023_02.parser import parse_xml_logbook as parser
-from logbook_parser.apa_2023_02.parser.flatten_raw import flatten_logbook
+from apa_logbook_parser.apa_2023_02.models.raw_flat import FlatLogbook
+from apa_logbook_parser.apa_2023_02.parser import parse_xml_logbook as parser
+from apa_logbook_parser.apa_2023_02.parser.flatten_raw import flatten_logbook
 
 
 def test_flatten_logbook(report_data_ctx, test_app_data_dir: Path):

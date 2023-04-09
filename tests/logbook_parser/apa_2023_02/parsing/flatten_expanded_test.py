@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from logbook_parser.apa_2023_02.models.expanded_flat import ExpandedFlatLogbook
-from logbook_parser.apa_2023_02.parser import parse_xml_logbook as parser
-from logbook_parser.apa_2023_02.parser.expand_raw import expand_raw_logbook
-from logbook_parser.apa_2023_02.parser.flatten_expanded import LogbookFlattener
+from apa_logbook_parser.apa_2023_02.models.expanded_flat import ExpandedFlatLogbook
+from apa_logbook_parser.apa_2023_02.parser import parse_xml_logbook as parser
+from apa_logbook_parser.apa_2023_02.parser.expand_raw import expand_raw_logbook
+from apa_logbook_parser.apa_2023_02.parser.flatten_expanded import LogbookFlattener
 
 
 def test_flatten_expanded(report_data_ctx, test_app_data_dir: Path):

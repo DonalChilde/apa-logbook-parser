@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from logbook_parser.apa_2023_02.models.expanded import Logbook
-from logbook_parser.apa_2023_02.parser import parse_xml_logbook as parser
-from logbook_parser.apa_2023_02.parser.expand_raw import expand_raw_logbook
+from apa_logbook_parser.apa_2023_02.models.expanded import Logbook
+from apa_logbook_parser.apa_2023_02.parser import parse_xml_logbook as parser
+from apa_logbook_parser.apa_2023_02.parser.expand_raw import expand_raw_logbook
 
 
 def test_expand_raw_logbook(report_data_ctx, test_app_data_dir: Path):

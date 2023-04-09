@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from logbook_parser.apa_2023_02.models.raw import Logbook
-from logbook_parser.apa_2023_02.parser import parse_xml_logbook as parser
+from apa_logbook_parser.apa_2023_02.models.raw import Logbook
+from apa_logbook_parser.apa_2023_02.parser import parse_xml_logbook as parser
 
 
 def test_parse_xml(report_data_ctx):

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from logbook_parser.airports_db.airports import from_iata
+from apa_logbook_parser.airports_db.airports import from_iata
 
 
 def test_iata():

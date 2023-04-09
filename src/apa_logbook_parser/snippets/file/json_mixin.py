@@ -11,7 +11,7 @@
 
 from pathlib import Path
 
-from logbook_parser.snippets.file.validate_file_out import validate_file_out
+from apa_logbook_parser.snippets.file.validate_file_out import validate_file_out
 
 
 class JsonMixin:

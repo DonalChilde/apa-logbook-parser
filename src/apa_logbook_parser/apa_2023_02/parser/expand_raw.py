@@ -5,9 +5,9 @@ from datetime import time as dt_time
 from datetime import timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from logbook_parser.airports_db.airports import from_iata
-from logbook_parser.apa_2023_02.models import expanded, raw
-from logbook_parser.snippets.datetime.parse_duration_regex import (
+from apa_logbook_parser.airports_db.airports import from_iata
+from apa_logbook_parser.apa_2023_02.models import expanded, raw
+from apa_logbook_parser.snippets.datetime.parse_duration_regex import (
     parse_duration,
     pattern_HHHMM,
 )

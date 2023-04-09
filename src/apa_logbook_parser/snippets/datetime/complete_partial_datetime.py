@@ -13,7 +13,7 @@ import time
 from calendar import isleap
 from datetime import datetime, timedelta, tzinfo
 
-from logbook_parser.snippets.datetime.datetime_from_struct_time import (
+from apa_logbook_parser.snippets.datetime.datetime_from_struct_time import (
     datetime_from_struct,
 )
 

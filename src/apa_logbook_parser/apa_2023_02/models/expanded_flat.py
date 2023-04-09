@@ -4,9 +4,9 @@ from typing import Any, Callable, Iterable, Iterator
 
 from pydantic import BaseModel
 
-from logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
-from logbook_parser.snippets.file.dicts_to_csv import DictToCsvMixin
-from logbook_parser.snippets.file.json_mixin import JsonMixin
+from apa_logbook_parser.apa_2023_02.models.metadata import ParsedMetadata
+from apa_logbook_parser.snippets.file.dicts_to_csv import DictToCsvMixin
+from apa_logbook_parser.snippets.file.json_mixin import JsonMixin
 
 
 class ExpandedFlightRow(BaseModel):
