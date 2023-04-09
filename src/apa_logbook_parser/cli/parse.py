@@ -38,7 +38,14 @@ def parse(
     overwrite: bool,
     # default_filename: bool,
 ):
-    """"""
+    """Parse an APA logbook XML file, and output in several formats.
+
+    FILE_IN - the path to an APA Logbook in XML format.
+
+    PATH_OUT - the path to an output directory where the translated logbook files will be written.
+
+    try apa-logbook-parser --help for more details.
+    """
 
     raw_logbook = parse_logbook(file_path=file_in)
     formatted_source_path = path_out / raw_logbook.default_file_name()
