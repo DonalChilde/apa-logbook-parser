@@ -88,7 +88,7 @@ class FlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
         first, last = self.first_and_last_departure()
         start_date = first.date().isoformat()
         end_date = last.date().isoformat()
-        return f"{start_date}L-{end_date}L-flattened-raw-logbook.json"
+        return f"{self.rows[0].aa_number}-{start_date}L-{end_date}L-flattened-raw-logbook.json"
 
     def first_and_last_departure(self) -> Tuple[datetime, datetime]:
         sorted_rows = sorted(self.rows, key=attrgetter("departure_local"))

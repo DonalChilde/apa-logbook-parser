@@ -159,7 +159,7 @@ class Logbook(BaseModel, JsonMixin):
                 start_date = trip.first_departure().date().isoformat()
         if trip is not None:
             end_date = trip.last_departure().date().isoformat()
-        return f"{start_date}Z-{end_date}Z-expanded-logbook.json"
+        return f"{self.aa_number}-{start_date}Z-{end_date}Z-expanded-logbook.json"
 
     def sorted_trips(self, tz_spec: Literal["utc", "local"] = "utc") -> Iterable[Trip]:
         """Trips sorted based on first departure time"""

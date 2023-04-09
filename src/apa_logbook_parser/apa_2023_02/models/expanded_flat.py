@@ -71,7 +71,7 @@ class ExpandedFlatLogbook(BaseModel, DictToCsvMixin, JsonMixin):
                 )
         if row is not None:
             end_date = datetime.fromisoformat(row.departure_utc).date().isoformat()
-        return f"{start_date}Z-{end_date}Z-flattened-expanded-logbook.json"
+        return f"{self.rows[0].aa_number}-{start_date}Z-{end_date}Z-flattened-expanded-logbook.json"
 
     def sorted(
         self, getter: Callable[[ExpandedFlightRow], Any] = attrgetter("departure_utc")

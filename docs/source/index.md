@@ -8,7 +8,6 @@ maxdepth: 1
 
 Usage <usage>
 CLI reference <apa_logbook_parser_cli>
-API Reference <api-reference/modules.rst>
 Changelog <changelog>
 License <license>
 Contributing <contributing>
