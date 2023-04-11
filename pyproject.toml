@@ -21,7 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 dependencies = ["airportsdata", "more-itertools", "pydantic", "click"]
-version = "0.0.1"
+version = "0.1.0"
 [project.urls]
 Documentation = "https://github.com/DonalChilde/logbook-parser#readme"
 Documentation_rtd = "https://logbook-parser.readthedocs.io"
