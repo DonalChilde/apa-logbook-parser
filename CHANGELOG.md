@@ -2,9 +2,17 @@
 <!-- markdownlint-disable MD024 -->
 <!-- changelog-start -->
 
-## [Unreleased](https://github.com/DonalChilde/apa-logbook-parser/v0.1.0...refs/heads/develop)
+## [Unreleased](https://github.com/DonalChilde/apa-logbook-parser/v0.1.1...refs/heads/develop)
 <!-- Dont forget to update the Unreleased compare version to latest release tag -->
 <!-- Copy paste release notes below here -->
+
+## [v0.1.1 2023-04-11](https://github.com/DonalChilde/apa-logbook-parser/compare/v0.1.0...v0.1.1)
+
+### What's Changed in v0.1.1
+
+Renamed github project from logbook-parser to apa-logbook-parser
+
+- Rename project to apa logbook parser ([#25](https://github.com/DonalChilde/apa-logbook-parser/pull/25))
 
 ## [v0.1.0 2023-04-11](https://github.com/DonalChilde/apa-logbook-parser/compare/v0.0.0...v0.1.0)
 
