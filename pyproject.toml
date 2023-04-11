@@ -4,7 +4,7 @@ requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "logbook-parser"
+name = "apa-logbook-parser"
 description = "logbook-parser_short_description"
 # readme = "README.rst"
 requires-python = ">=3.10"
@@ -20,16 +20,8 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
 ]
-dependencies = ["airportsdata", "more-itertools"]
-version = "v0.0.1"
-# dynamic = ["version", "readme"]
-
-# [tool.setuptools.dynamic]
-# version = { attr = "logbook_parser.__version__" }
-# readme = { file = ["README.rst"] }
-
-# [tool.setuptools.packages.find]
-# where = ["src"]
+dependencies = ["airportsdata", "more-itertools", "pydantic", "click"]
+version = "0.1.0"
 [project.urls]
 Documentation = "https://github.com/DonalChilde/logbook-parser#readme"
 Documentation_rtd = "https://logbook-parser.readthedocs.io"
@@ -68,48 +60,10 @@ testing = [
     "pysnooper",
     "devtools",
 ]
-# dev = [
-#     # Packaging and Distribution
-#     # NOTE: pip and setuptools should be installed/upgraded separately
-#     "wheel",
-#     "twine",
-#     "pip-tools",
-#     "build",
-
-#     # Linting and Formatting
-#     "black",
-#     "coverage",
-#     "pylint",
-#     "mypy",
-#     # "doc8",
-
-#     # Testing
-#     "tox",
-#     "pytest",
-#     "pytest-cov",
-
-#     # Source control
-#     "pre-commit",
-
-#     # Tools
-#     "pysnooper",
-
-#     # Documentation
-#     "Sphinx",
-#     "sphinx-autobuild",
-#     "sphinx-autodoc-typehints",
-#     "sphinx_rtd_theme",
-#     "myst-parser",
-
-#     # Vscode
-#     "esbonio",
-#     "rst2html",
-#     "rstcheck",
-# ]
 
 
 [project.scripts]
-aa-logbook-parser = "logbook_parser.logbook_parser:cli"
+apa-logbook-parser = "apa_logbook_parser.cli.main:main"
 
 [tool.isort]
 profile = "black"

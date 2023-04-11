@@ -1,7 +1,7 @@
 """conftest.py file for logbook_parser"""
 import logging
-from pathlib import Path
 from importlib import resources
+from pathlib import Path
 
 import pytest
 
@@ -17,7 +17,9 @@ PROJECT_SLUG = "logbook_parser".upper()
 
 @pytest.fixture(scope="session")
 def report_data_ctx():
-    return resources.path("tests.logbook_parser.resources", "formatted_report.xml")
+    package_dir = resources.files("tests.logbook_parser.resources")
+    return package_dir.joinpath("formatted_report.xml")
+    # return resources.path("tests.logbook_parser.resources", "formatted_report.xml")
 
 
 @pytest.fixture(scope="session", name="logger")

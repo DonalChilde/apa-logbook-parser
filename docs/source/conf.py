@@ -15,17 +15,16 @@ import sys
 from importlib.metadata import distribution
 
 sys.path.insert(0, os.path.abspath("../../src"))
-import aa_pbs_exporter  # pylint: disable=wrong-import-position
+import apa_logbook_parser  # pylint: disable=wrong-import-position
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-distro = distribution("aa_pbs_exporter")
-print(distro)
-project = distro.metadata["Name"]
+distro = distribution("apa_logbook_parser")
+project = f'{distro.metadata["Name"]}'
 project_copyright = f"2022, {distro.metadata['Author']}"
-author = distro.metadata["Author"]
+author = f"{distro.metadata['Author']}"
 # The full version, including alpha/beta/rc tags.
-release = distro.metadata["Version"]
+release = f'{distro.metadata["Version"]}'
 # The short X.Y.Z version.
 version = release
 
@@ -71,3 +70,4 @@ pygments_style = "sphinx"
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+# print("Variables:\n", locals())
