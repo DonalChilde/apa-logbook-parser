@@ -23,10 +23,10 @@ classifiers = [
 dependencies = ["airportsdata", "more-itertools", "pydantic", "click"]
 version = "0.1.0"
 [project.urls]
-Documentation = "https://github.com/DonalChilde/logbook-parser#readme"
-Documentation_rtd = "https://logbook-parser.readthedocs.io"
-Issues = "https://github.com/DonalChilde/logbook-parser/issues"
-Source = "https://github.com/DonalChilde/logbook-parser"
+Documentation = "https://github.com/DonalChilde/apa-logbook-parser#readme"
+Documentation_rtd = "https://apa-logbook-parser.readthedocs.io"
+Issues = "https://github.com/DonalChilde/apa-logbook-parser/issues"
+Source = "https://github.com/DonalChilde/apa-logbook-parser"
 [project.optional-dependencies]
 dev = [
 
